@@ -2,7 +2,7 @@
 # install.sh — one-line installer for the VectorGrid Inference Engine CLI.
 #
 # Usage:
-#     curl -fsSL https://raw.githubusercontent.com/divyaman777/VectorGridInferenceEngineRelease/main/install.sh | sh
+#     curl -fsSL https://raw.githubusercontent.com/VectorGrid/vectorgrid/main/install.sh | sh
 #
 # What it does:
 #   1. Detects the host OS (Darwin or Linux) and CPU arch (arm64 or x86_64).
@@ -26,10 +26,10 @@ set -e
 # API in main). Pin with e.g. VECTORGRID_VERSION=v0.1.0 to install a
 # specific version.
 VECTORGRID_VERSION="${VECTORGRID_VERSION:-}"
-GITHUB_OWNER="${VECTORGRID_GITHUB_OWNER:-divyaman777}"
+GITHUB_OWNER="${VECTORGRID_GITHUB_OWNER:-VectorGrid}"
 # Binaries are published to the public releases repository; the source
 # repository stays private. Override with VECTORGRID_GITHUB_REPO.
-GITHUB_REPO="${VECTORGRID_GITHUB_REPO:-VectorGridInferenceEngineRelease}"
+GITHUB_REPO="${VECTORGRID_GITHUB_REPO:-vectorgrid}"
 INSTALL_DIR="${VECTORGRID_INSTALL_DIR:-$HOME/.vectorgrid/bin}"
 
 # -----------------------------------------------------------------------------

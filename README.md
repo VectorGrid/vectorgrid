@@ -7,7 +7,7 @@ Python, no CUDA toolkit, no Docker required.
 ## Install (macOS + Linux)
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/divyaman777/VectorGridInferenceEngineRelease/main/install.sh | sh
+curl -sSL https://raw.githubusercontent.com/VectorGrid/vectorgrid/main/install.sh | sh
 ```
 
 The installer detects your platform (on Linux it picks the CUDA build
