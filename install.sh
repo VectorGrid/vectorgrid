@@ -65,7 +65,12 @@ detect_target() {
             echo "x86_64-unknown-linux-gnu"
           fi
           ;;
-        *) fatal "Unsupported Linux architecture: ${uname_m} (only x86_64 is supported)" ;;
+        aarch64|arm64)
+          # CPU-only tarball (NEON kernels). There is no aarch64 CUDA
+          # tarball yet, so Jetson-class boards get the CPU build too.
+          echo "aarch64-unknown-linux-gnu"
+          ;;
+        *) fatal "Unsupported Linux architecture: ${uname_m} (x86_64 and aarch64 are supported)" ;;
       esac
       ;;
     *)
