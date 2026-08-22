@@ -27,7 +27,26 @@ vectorgrid update
 ```
 
 Re-running the install one-liner also upgrades in place. Pin a version with
-`VECTORGRID_VERSION=vX.Y.Z`.
+`VECTORGRID_VERSION=vX.Y.Z` (note: the variable goes on `sh`, not `curl`):
+
+```bash
+curl -sSL https://raw.githubusercontent.com/VectorGrid/vectorgrid/main/install.sh | VECTORGRID_VERSION=v0.6.0 sh
+```
+
+### Pre-release / bleeding-edge builds
+
+The one-liner installs the latest **stable** release. Newer **pre-releases**
+(the current tip of development, cut between stable releases) are published on
+the [Releases page](https://github.com/VectorGrid/vectorgrid/releases) but are
+**not** auto-installed — pin them explicitly. For example, to install the
+latest **v0.6.1** pre-release:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/VectorGrid/vectorgrid/main/install.sh | VECTORGRID_VERSION=v0.6.1 sh
+```
+
+A pre-release may not carry every platform's asset; if yours isn't published for
+that version the installer will say so — just fall back to the stable one-liner.
 
 ## What's in a release
 
