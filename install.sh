@@ -171,6 +171,17 @@ main() {
   chmod +x "${install_target}"
   info "Installed to ${install_target}"
 
+  # The CUDA build ships its runtime libraries (cudart, cublas, nvrtc) in a
+  # sibling lib/ dir; the binary finds them via RUNPATH '$ORIGIN/lib'. Install
+  # that dir next to the binary too, or GPU users get "CUDA runtime libraries
+  # not found" despite a working NVIDIA driver. CPU/Metal tarballs have no
+  # lib/, so this is a no-op there.
+  if [ -d "${TMPDIR}/${PKG}/lib" ]; then
+    rm -rf "${INSTALL_DIR}/lib"
+    cp -a "${TMPDIR}/${PKG}/lib" "${INSTALL_DIR}/lib"
+    info "Installed bundled runtime libraries to ${INSTALL_DIR}/lib"
+  fi
+
   # PATH hint. Detect which shell rc to suggest.
   shell_name="$(basename "${SHELL:-sh}")"
   case "${shell_name}" in
