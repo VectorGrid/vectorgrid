@@ -167,8 +167,14 @@ main() {
   # Install to $INSTALL_DIR.
   mkdir -p "${INSTALL_DIR}"
   install_target="${INSTALL_DIR}/vectorgrid"
-  cp "${TMPDIR}/${PKG}/vectorgrid" "${install_target}"
-  chmod +x "${install_target}"
+  # Stage + rename, NEVER copy over the existing file in place: overwriting
+  # the same inode while a `vectorgrid serve` is running invalidates macOS's
+  # kernel code-signature cache for that inode, and every new launch of the
+  # binary is then SIGKILL'd (exit 137) with no output. A rename installs a
+  # fresh inode atomically and is safe while the old binary is running.
+  cp "${TMPDIR}/${PKG}/vectorgrid" "${install_target}.tmp.$$"
+  chmod +x "${install_target}.tmp.$$"
+  mv -f "${install_target}.tmp.$$" "${install_target}"
   info "Installed to ${install_target}"
 
   # The CUDA build ships its runtime libraries (cudart, cublas, nvrtc) in a
