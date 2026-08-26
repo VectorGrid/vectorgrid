@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VectorGrid — run any open model on a grid you own</title>
+<meta name="description" content="One binary, one GGUF. A local AI agent, an OpenAI-compatible server, and a network layer that pools every machine you own into one inference grid. No Python, no Docker, no cloud." />
+<link rel="canonical" href="https://vectorgrid.net/" />
+<meta property="og:title" content="VectorGrid — run any open model on a grid you own" />
+<meta property="og:description" content="One binary, one GGUF. A local agent, an OpenAI-compatible server, and machine pooling for models too big for any one box." />
+<meta property="og:url" content="https://vectorgrid.net/" />
+<meta property="og:type" content="website" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='24' y2='24'%3E%3Cstop stop-color='%238A78FF'/%3E%3Cstop offset='1' stop-color='%2322E0BE'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='5' cy='5' r='2.1' fill='url(%23g)'/%3E%3Ccircle cx='12' cy='5' r='2.1' fill='%236E56F7'/%3E%3Ccircle cx='19' cy='5' r='2.1' fill='url(%23g)'/%3E%3Ccircle cx='5' cy='12' r='2.1' fill='%236E56F7'/%3E%3Ccircle cx='12' cy='12' r='2.6' fill='url(%23g)'/%3E%3Ccircle cx='19' cy='12' r='2.1' fill='%236E56F7'/%3E%3Ccircle cx='5' cy='19' r='2.1' fill='url(%23g)'/%3E%3Ccircle cx='12' cy='19' r='2.1' fill='%236E56F7'/%3E%3Ccircle cx='19' cy='19' r='2.1' fill='url(%23g)'/%3E%3C/svg%3E" />
+<style>
+/* ---------- Fonts (self-hosted, spec §4) ---------- */
+@font-face{font-family:'Geist';src:url('/fonts/Geist-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'Geist';src:url('/fonts/Geist-Medium.woff2') format('woff2');font-weight:500;font-display:swap}
+@font-face{font-family:'Geist';src:url('/fonts/Geist-SemiBold.woff2') format('woff2');font-weight:600;font-display:swap}
+@font-face{font-family:'Geist Mono';src:url('/fonts/GeistMono-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'Geist Mono';src:url('/fonts/GeistMono-Medium.woff2') format('woff2');font-weight:500;font-display:swap}
+@font-face{font-family:'Geist Mono';src:url('/fonts/GeistMono-SemiBold.woff2') format('woff2');font-weight:600;font-display:swap}
+
+/* ---------- Tokens (spec §22.2, authoritative) ---------- */
+:root{
+  --bg-void:#07080B; --bg-base:#0A0C11; --bg-surface:#101319;
+  --bg-raised:#161A23; --bg-overlay:#1E232E;
+  --border-hairline:rgba(255,255,255,.06); --border-subtle:rgba(255,255,255,.10); --border-strong:rgba(255,255,255,.16);
+  --text-primary:#F4F6FB; --text-secondary:#AEB4C2; --text-tertiary:#767D8E; --text-disabled:#4A5061;
+  --iris-300:#A896FF; --iris-400:#8A78FF; --iris-500:#6E56F7; --iris-600:#5A45D6;
+  --aqua-300:#7DF5DF; --aqua-400:#4CEBCD; --aqua-500:#22E0BE; --aqua-600:#12B89B;
+  --gold-400:#FFC24B; --success:#2FD98A; --danger:#FF5D6C;
+  --r-xs:6px; --r-sm:8px; --r-md:10px; --r-lg:14px; --r-xl:20px; --r-2xl:28px; --r-full:9999px;
+  --e-standard:cubic-bezier(.4,0,.2,1); --e-out-expo:cubic-bezier(.16,1,.3,1);
+  --d-fast:140ms; --d-base:200ms; --d-slow:320ms;
+  --grad-plasma:linear-gradient(135deg,#6E56F7 0%,#22E0BE 100%);
+  --font-sans:'Geist',Inter,ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --font-mono:'Geist Mono','JetBrains Mono',ui-monospace,'SF Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{
+  background:var(--bg-base); color:var(--text-primary);
+  font-family:var(--font-sans); font-size:16px; line-height:1.6;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+::selection{background:rgba(110,86,247,.35)}
+a{color:var(--iris-400);text-decoration:none}
+a:hover{color:var(--iris-300)}
+:focus-visible{outline:2px solid var(--iris-500);outline-offset:2px;border-radius:var(--r-xs)}
+.mono{font-family:var(--font-mono);font-feature-settings:"tnum" 1}
+
+/* ---------- Layout ---------- */
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+@media (max-width:767px){.container{padding:0 16px}}
+section{padding:96px 0}
+@media (max-width:1023px){section{padding:64px 0}}
+@media (max-width:767px){section{padding:48px 0}}
+.overline{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary)}
+.overline .tick{color:var(--aqua-500)}
+h1,h2,h3{font-weight:600;text-wrap:balance}
+.display{font-size:clamp(2.75rem,6vw + 1rem,4.5rem);line-height:1.05;letter-spacing:-.02em}
+h2{font-size:clamp(2rem,3vw + 1rem,2.75rem);line-height:1.1;letter-spacing:-.015em;margin-bottom:16px}
+h3{font-size:22px;line-height:1.3;letter-spacing:-.01em}
+.lead{font-size:18px;color:var(--text-secondary);max-width:68ch}
+
+/* ---------- Nav ---------- */
+.nav{position:sticky;top:0;z-index:100;height:56px;backdrop-filter:blur(12px);background:rgba(10,12,17,.8);border-bottom:1px solid transparent;transition:border-color var(--d-base) var(--e-standard)}
+.nav.scrolled{border-bottom-color:var(--border-hairline)}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:56px;display:flex;align-items:center;gap:32px}
+.brand{display:flex;align-items:center;gap:10px;color:var(--text-primary);font-weight:600;font-size:17px}
+.brand svg{display:block}
+.nav-links{display:flex;gap:24px;flex:1}
+.nav-links a{color:var(--text-secondary);font-size:14px;font-weight:500;transition:color var(--d-fast) var(--e-standard)}
+.nav-links a:hover{color:var(--text-primary)}
+@media (max-width:767px){.nav-links{display:none}}
+.nav-cta{margin-left:auto}
+
+/* ---------- Buttons (spec §11.1) ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:500;font-size:14px;border-radius:var(--r-md);border:1px solid transparent;cursor:pointer;transition:all var(--d-base) var(--e-standard);white-space:nowrap}
+.btn:active{transform:scale(.98)}
+.btn-md{height:40px;padding:0 16px}
+.btn-xl{height:56px;padding:0 24px;font-size:16px;border-radius:var(--r-md)}
+.btn-primary{background:var(--iris-500);color:#fff}
+.btn-primary:hover{background:var(--iris-400);color:#fff;box-shadow:0 0 0 1px rgba(110,86,247,.4),0 0 24px rgba(110,86,247,.35)}
+.btn-secondary{background:transparent;border-color:var(--border-subtle);color:var(--text-primary)}
+.btn-secondary:hover{background:var(--bg-raised);color:var(--text-primary)}
+
+/* ---------- Hero ---------- */
+.hero{position:relative;padding:110px 0 96px;overflow:hidden;background:var(--bg-void)}
+#grid-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hero .aurora{position:absolute;inset:0;pointer-events:none;background:
+  radial-gradient(60% 50% at 20% 10%,rgba(110,86,247,.22),transparent 70%),
+  radial-gradient(50% 45% at 85% 20%,rgba(34,224,190,.16),transparent 70%),
+  radial-gradient(70% 60% at 50% 110%,rgba(110,86,247,.14),transparent 70%)}
+.hero .vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(7,8,11,.85) 100%)}
+.hero-inner{position:relative;z-index:2;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:48px;align-items:center}
+@media (max-width:1023px){.hero-inner{grid-template-columns:1fr}}
+.hero h1 .plasma{background:var(--grad-plasma);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .lead{margin:20px 0 32px}
+.cta-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+@media (max-width:479px){.cta-row .btn{width:100%}}
+
+/* install command card */
+.install-card{margin-top:28px;max-width:640px;background:rgba(16,19,25,.72);backdrop-filter:blur(16px);border:1px solid var(--border-hairline);border-radius:var(--r-lg);padding:14px 16px;display:flex;align-items:center;gap:12px}
+.install-card code{flex:1;font-family:var(--font-mono);font-size:13.5px;color:var(--text-primary);overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+.install-card code::-webkit-scrollbar{display:none}
+.install-card .dollar{color:var(--aqua-500);user-select:none}
+.copy-btn{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;font-size:12px;font-weight:500;font-family:var(--font-sans);color:var(--text-secondary);background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:var(--r-sm);cursor:pointer;transition:all var(--d-fast) var(--e-standard)}
+.copy-btn:hover{color:var(--text-primary);border-color:var(--border-strong)}
+.copy-btn.copied{color:var(--aqua-400);border-color:rgba(34,224,190,.4)}
+.install-meta{margin-top:10px;font-size:12px;color:var(--text-tertiary)}
+.install-meta a{color:var(--text-tertiary);text-decoration:underline;text-underline-offset:2px}
+.install-meta a:hover{color:var(--text-secondary)}
+
+/* counter strip */
+.counters{position:relative;z-index:2;margin-top:64px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:820px}
+@media (max-width:767px){.counters{grid-template-columns:repeat(2,1fr)}}
+.counter .num{font-family:var(--font-mono);font-feature-settings:"tnum" 1;font-size:clamp(1.6rem,2.6vw,2.4rem);font-weight:600;line-height:1;color:var(--text-primary)}
+.counter .num .unit{font-size:.55em;color:var(--text-tertiary);font-weight:500}
+.counter .lbl{margin-top:6px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary)}
+
+/* ---------- Terminal panel ---------- */
+.term{position:relative;background:rgba(7,8,11,.85);backdrop-filter:blur(16px);border-radius:var(--r-xl);border:1px solid transparent;
+  background-image:linear-gradient(rgba(13,15,20,.92),rgba(13,15,20,.92)),var(--grad-plasma);
+  background-origin:border-box;background-clip:padding-box,border-box;
+  box-shadow:0 24px 64px rgba(0,0,0,.6),0 0 48px rgba(110,86,247,.12)}
+.term-head{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid var(--border-hairline)}
+.term-dot{width:10px;height:10px;border-radius:var(--r-full);background:var(--bg-overlay)}
+.term-title{margin-left:8px;font-family:var(--font-mono);font-size:12px;color:var(--text-tertiary)}
+.term-body{padding:18px;font-family:var(--font-mono);font-size:13px;line-height:1.75;min-height:300px}
+.term-body .ln{white-space:pre-wrap;word-break:break-word}
+.t-dollar{color:var(--aqua-500)}
+.t-cmd{color:var(--text-primary)}
+.t-dim{color:var(--text-tertiary)}
+.t-out{color:var(--text-secondary)}
+.t-aqua{color:var(--aqua-400)}
+.t-iris{color:var(--iris-300)}
+.caret{display:inline-block;width:7px;height:15px;background:var(--aqua-500);vertical-align:text-bottom;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.caret{animation:none}}
+
+/* ---------- Cards / grids ---------- */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+@media (max-width:1023px){.grid-3{grid-template-columns:1fr 1fr}}
+@media (max-width:767px){.grid-2,.grid-3{grid-template-columns:1fr}}
+.card{background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:var(--r-lg);padding:24px;transition:border-color var(--d-base) var(--e-standard),transform var(--d-base) var(--e-standard),box-shadow var(--d-base) var(--e-standard)}
+.card:hover{border-color:var(--border-subtle);transform:translateY(-2px);box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.card h3{margin-bottom:8px}
+.card p{font-size:14px;color:var(--text-secondary)}
+.card .glyph{width:40px;height:40px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;background:rgba(110,86,247,.12);margin-bottom:16px}
+.card .glyph svg{stroke:var(--iris-400)}
+.card .glyph.aqua{background:rgba(34,224,190,.10)}
+.card .glyph.aqua svg{stroke:var(--aqua-500)}
+.card code{font-family:var(--font-mono);font-size:12.5px;color:var(--iris-300);background:rgba(110,86,247,.08);padding:1px 6px;border-radius:var(--r-xs)}
+
+/* section header block */
+.sec-head{max-width:720px;margin-bottom:48px}
+.sec-head .overline{display:block;margin-bottom:12px}
+.sec-head p{color:var(--text-secondary);font-size:18px}
+
+/* ---------- Pooling diagram ---------- */
+.pool-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:center}
+@media (max-width:1023px){.pool-wrap{grid-template-columns:1fr}}
+.pool-code{background:var(--bg-void);border:1px solid var(--border-hairline);border-radius:var(--r-lg);padding:18px;font-family:var(--font-mono);font-size:13px;line-height:1.8;overflow-x:auto;white-space:pre-wrap}
+.pool-list{list-style:none;margin-top:24px;display:grid;gap:12px}
+.pool-list li{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--text-secondary)}
+.pool-list li strong{color:var(--text-primary);font-weight:500}
+.pool-list .dot{flex-shrink:0;margin-top:7px;width:6px;height:6px;border-radius:var(--r-full);background:var(--aqua-500)}
+
+/* ---------- Benchmarks ---------- */
+.bench{background:var(--bg-void);border-top:1px solid var(--border-hairline);border-bottom:1px solid var(--border-hairline)}
+.bench-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+@media (max-width:1023px){.bench-grid{grid-template-columns:1fr 1fr}}
+@media (max-width:767px){.bench-grid{grid-template-columns:1fr}}
+.bench-tile{background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:var(--r-lg);padding:24px}
+.bench-tile .val{font-family:var(--font-mono);font-feature-settings:"tnum" 1;font-size:clamp(1.9rem,2.6vw,2.6rem);font-weight:600;line-height:1.05}
+.bench-tile .val .unit{font-size:.5em;color:var(--text-tertiary);font-weight:500}
+.bench-tile .val.aqua{color:var(--aqua-400)}
+.bench-tile .val.iris{color:var(--iris-300)}
+.bench-tile .what{margin-top:10px;font-size:14px;color:var(--text-secondary)}
+.bench-tile .how{margin-top:8px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-tertiary)}
+.bench-note{margin-top:24px;font-size:12.5px;color:var(--text-tertiary);max-width:68ch}
+
+/* ---------- Models ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{font-family:var(--font-mono);font-size:12.5px;font-weight:500;color:var(--text-secondary);background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:var(--r-full);padding:6px 14px;transition:all var(--d-fast) var(--e-standard)}
+.chip:hover{color:var(--text-primary);border-color:var(--border-subtle)}
+.chip.hl{color:var(--aqua-400);border-color:rgba(34,224,190,.25)}
+
+/* ---------- Verify strip ---------- */
+.verify{background:linear-gradient(180deg,var(--bg-base),var(--bg-void))}
+.verify-inner{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:center}
+@media (max-width:1023px){.verify-inner{grid-template-columns:1fr}}
+.sha-line{font-family:var(--font-mono);font-size:13px;color:var(--text-tertiary);display:flex;flex-direction:column;gap:8px}
+.sha-line .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.sha-line .machine{color:var(--text-secondary);min-width:150px}
+.sha-line .hash{color:var(--aqua-400)}
+.sha-line .eq{color:var(--success);font-weight:600}
+
+/* ---------- Final CTA ---------- */
+.final{position:relative;overflow:hidden;border-radius:var(--r-2xl);padding:64px 48px;text-align:center;background:
+  radial-gradient(80% 120% at 50% 0%,rgba(110,86,247,.28),transparent 70%),
+  radial-gradient(60% 100% at 80% 100%,rgba(34,224,190,.14),transparent 70%),var(--bg-surface);
+  border:1px solid var(--border-hairline)}
+@media (max-width:767px){.final{padding:48px 20px}}
+.final h2{margin-bottom:12px}
+.final p{color:var(--text-secondary);margin-bottom:32px}
+.final .install-card{margin:0 auto 24px}
+
+/* ---------- Footer ---------- */
+footer{border-top:1px solid var(--border-hairline);padding:48px 0;background:var(--bg-void)}
+.foot{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+.foot .links{display:flex;gap:24px;flex-wrap:wrap}
+.foot a{color:var(--text-tertiary);font-size:13px}
+.foot a:hover{color:var(--text-secondary)}
+.foot .copy{color:var(--text-disabled);font-size:12.5px}
+
+/* ---------- Reveal motion ---------- */
+.reveal{opacity:0;transform:translateY(8px);transition:opacity var(--d-base) var(--e-out-expo),transform var(--d-base) var(--e-out-expo)}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+</style>
+</head>
+<body>
+
+<nav class="nav" id="nav" aria-label="Main">
+  <div class="nav-inner">
+    <a class="brand" href="#top" aria-label="VectorGrid home">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="bg1" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#8A78FF"/><stop offset="1" stop-color="#22E0BE"/></linearGradient></defs><circle cx="5" cy="5" r="2.1" fill="url(#bg1)"/><circle cx="12" cy="5" r="2.1" fill="#6E56F7"/><circle cx="19" cy="5" r="2.1" fill="url(#bg1)"/><circle cx="5" cy="12" r="2.1" fill="#6E56F7"/><circle cx="12" cy="12" r="2.6" fill="url(#bg1)"/><circle cx="19" cy="12" r="2.1" fill="#6E56F7"/><circle cx="5" cy="19" r="2.1" fill="url(#bg1)"/><circle cx="12" cy="19" r="2.1" fill="#6E56F7"/><circle cx="19" cy="19" r="2.1" fill="url(#bg1)"/></svg>
+      VectorGrid
+    </a>
+    <div class="nav-links">
+      <a href="#agent">Agent</a>
+      <a href="#pooling">Pooling</a>
+      <a href="#benchmarks">Benchmarks</a>
+      <a href="#models">Models</a>
+      <a href="https://github.com/VectorGrid/vectorgrid" rel="noopener">GitHub</a>
+    </div>
+    <a class="btn btn-primary btn-md nav-cta" href="#install">Install</a>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero" id="top">
+  <canvas id="grid-canvas" aria-hidden="true"></canvas>
+  <div class="aurora" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="container hero-inner">
+    <div>
+      <span class="overline"><span class="tick">●</span> Free · MIT-licensed binaries · Pure Rust</span>
+      <h1 class="display" style="margin-top:16px">Run any open model on a <span class="plasma">grid you own</span>.</h1>
+      <p class="lead">One binary, one GGUF file. A local AI agent, an OpenAI-compatible server, and a network layer that pools every machine you own into one inference grid. No Python, no CUDA toolkit, no Docker — and nothing leaves your network.</p>
+      <div class="install-card" id="install">
+        <span class="dollar mono" aria-hidden="true">$</span>
+        <code id="install-cmd">curl -sSL https://raw.githubusercontent.com/VectorGrid/vectorgrid/main/install.sh | sh</code>
+        <button class="copy-btn" data-copy="install-cmd" aria-label="Copy install command">Copy</button>
+      </div>
+      <p class="install-meta">macOS &amp; Linux · CUDA auto-detected, runtime bundled · SHA-256 verified · <a href="https://github.com/VectorGrid/vectorgrid/releases/latest" rel="noopener">Windows &amp; all builds</a></p>
+      <div class="cta-row" style="margin-top:28px">
+        <a class="btn btn-secondary btn-xl" href="https://github.com/VectorGrid/vectorgrid" rel="noopener">View on GitHub</a>
+      </div>
+      <div class="counters">
+        <div class="counter"><div class="num"><span data-count="104258">0</span></div><div class="lbl">Longest verified prompt<br>(tokens, one GPU)</div></div>
+        <div class="counter"><div class="num"><span data-count="40">0</span></div><div class="lbl">Curated models</div></div>
+        <div class="counter"><div class="num"><span data-count="1637">0</span></div><div class="lbl">Automated tests</div></div>
+        <div class="counter"><div class="num"><span data-count="6">0</span></div><div class="lbl">Platform builds</div></div>
+      </div>
+    </div>
+    <div class="reveal">
+      <div class="term" aria-label="Terminal demo">
+        <div class="term-head">
+          <span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
+          <span class="term-title">vectorgrid</span>
+        </div>
+        <div class="term-body" id="term-body"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= TWO WAYS IN ================= -->
+<section id="agent">
+  <div class="container">
+    <div class="sec-head reveal">
+      <span class="overline">Two ways in</span>
+      <h2>An agent that does the work. A server that speaks OpenAI.</h2>
+      <p>Both live in the same binary. Both run entirely on your machines.</p>
+    </div>
+    <div class="grid-2">
+      <div class="card reveal">
+        <div class="glyph"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></div>
+        <h3>The local agent</h3>
+        <p>Type <code>vectorgrid</code> and you're talking to an agent that can run commands, read and write files, search your code, browse the web, and call MCP servers — fully local, on the model you chose. First run, it detects your hardware and recommends a model that fits.</p>
+        <p style="margin-top:12px"><code>vectorgrid agent -p "summarize the last commit"</code></p>
+      </div>
+      <div class="card reveal">
+        <div class="glyph aqua"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></div>
+        <h3>The OpenAI-compatible server</h3>
+        <p>Point any OpenAI client at <code>localhost:28100/v1</code> and it works — streaming, tools, embeddings, continuous batching, speculative decoding. Your existing SDKs and apps swap over by changing one base URL.</p>
+        <p style="margin-top:12px"><code>vectorgrid serve --model qwen2.5-7b-instruct</code></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= POOLING ================= -->
+<section id="pooling" style="background:var(--bg-void)">
+  <div class="container">
+    <div class="sec-head reveal">
+      <span class="overline">The grid</span>
+      <h2>Your machines. One model.</h2>
+      <p>A gaming PC, a MacBook, an old workstation — each too small for the model you want. Pooled over your LAN, they run it together, streaming layer-to-layer with a transport built for inference.</p>
+    </div>
+    <div class="pool-wrap">
+      <div class="reveal">
+        <div class="pool-code" role="img" aria-label="Terminal commands for pooling two machines"><span class="t-dim"># on the machines with GPUs</span>
+<span class="t-dollar">$</span> <span class="t-cmd">vectorgrid worker --listen vgt://0.0.0.0:19310 --announce</span>
+
+<span class="t-dim"># on your laptop — workers are auto-discovered</span>
+<span class="t-dollar">$</span> <span class="t-cmd">vectorgrid run r1-distill-qwen-14b --pool</span>
+<span class="t-out">  discovered 2 workers · split 24/24 · <span class="t-aqua">streaming</span></span></div>
+        <ul class="pool-list">
+          <li><span class="dot"></span><span><strong>Byte-identical, split or not.</strong> The same seed produces the same bytes on one machine or five — verified by SHA on every release.</span></li>
+          <li><span class="dot"></span><span><strong>Survives failures mid-generation.</strong> A worker dies at token 88? The driver reconnects — or finds a different worker — and the output is still identical.</span></li>
+          <li><span class="dot"></span><span><strong>Loss-engineered transport.</strong> UDP lanes with selective-ACK ARQ and Reed-Solomon parity: at 5% packet loss, decode holds clean-link speed.</span></li>
+          <li><span class="dot"></span><span><strong>Encrypted by default.</strong> AEAD on every session; a plaintext peer fails loud, never silently.</span></li>
+        </ul>
+      </div>
+      <div class="reveal">
+        <svg viewBox="0 0 460 360" width="100%" style="max-width:460px;display:block;margin:0 auto" role="img" aria-label="Three machines pooled into one grid running a single model">
+          <defs>
+            <linearGradient id="pl" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6E56F7"/><stop offset="1" stop-color="#22E0BE"/></linearGradient>
+            <radialGradient id="ng" cx="50%" cy="50%" r="50%"><stop stop-color="rgba(110,86,247,.35)"/><stop offset="1" stop-color="rgba(110,86,247,0)"/></radialGradient>
+          </defs>
+          <g stroke="rgba(255,255,255,.09)" stroke-width="1">
+            <line x1="110" y1="90" x2="230" y2="180"/><line x1="350" y1="90" x2="230" y2="180"/><line x1="230" y1="300" x2="230" y2="180"/>
+          </g>
+          <line x1="110" y1="90" x2="230" y2="180" stroke="url(#pl)" stroke-width="1.5" stroke-dasharray="6 90" class="pulse-line"/>
+          <line x1="350" y1="90" x2="230" y2="180" stroke="url(#pl)" stroke-width="1.5" stroke-dasharray="6 90" class="pulse-line" style="animation-delay:.8s"/>
+          <g>
+            <circle cx="110" cy="90" r="34" fill="url(#ng)"/>
+            <rect x="86" y="66" width="48" height="48" rx="10" fill="#101319" stroke="rgba(255,255,255,.1)"/>
+            <text x="110" y="96" text-anchor="middle" font-family="Geist Mono,monospace" font-size="11" fill="#AEB4C2">GPU</text>
+            <text x="110" y="140" text-anchor="middle" font-family="Geist Mono,monospace" font-size="10" fill="#767D8E">gaming pc</text>
+          </g>
+          <g>
+            <circle cx="350" cy="90" r="34" fill="url(#ng)"/>
+            <rect x="326" y="66" width="48" height="48" rx="10" fill="#101319" stroke="rgba(255,255,255,.1)"/>
+            <text x="350" y="96" text-anchor="middle" font-family="Geist Mono,monospace" font-size="11" fill="#AEB4C2">M-series</text>
+            <text x="350" y="140" text-anchor="middle" font-family="Geist Mono,monospace" font-size="10" fill="#767D8E">macbook</text>
+          </g>
+          <g>
+            <circle cx="230" cy="300" r="34" fill="url(#ng)"/>
+            <rect x="206" y="276" width="48" height="48" rx="10" fill="#101319" stroke="rgba(255,255,255,.1)"/>
+            <text x="230" y="306" text-anchor="middle" font-family="Geist Mono,monospace" font-size="11" fill="#AEB4C2">CPU</text>
+            <text x="230" y="350" text-anchor="middle" font-family="Geist Mono,monospace" font-size="10" fill="#767D8E">workstation</text>
+          </g>
+          <g>
+            <circle cx="230" cy="180" r="44" fill="url(#ng)"/>
+            <circle cx="230" cy="180" r="26" fill="#0A0C11" stroke="url(#pl)" stroke-width="1.5"/>
+            <text x="230" y="177" text-anchor="middle" font-family="Geist Mono,monospace" font-size="9.5" fill="#7DF5DF">one</text>
+            <text x="230" y="190" text-anchor="middle" font-family="Geist Mono,monospace" font-size="9.5" fill="#7DF5DF">model</text>
+          </g>
+          <style>.pulse-line{animation:dashmove 2.4s linear infinite}@keyframes dashmove{to{stroke-dashoffset:-96}}@media (prefers-reduced-motion:reduce){.pulse-line{animation:none}}</style>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= VERIFIABLE ================= -->
+<section class="verify">
+  <div class="container verify-inner">
+    <div class="reveal">
+      <span class="overline">Deterministic by design</span>
+      <h2 style="margin-top:12px">Same seed. Same bytes. Any machine.</h2>
+      <p class="lead" style="margin-top:16px">Greedy decoding is bit-exact across CUDA, Metal, and CPU — alone or split across a pool, with or without speculative decoding. Every optimization ships only after it reproduces the golden hash. If your workload needs proof, VectorGrid can give you a hash, not a promise.</p>
+    </div>
+    <div class="reveal">
+      <div class="card" style="padding:28px">
+        <div class="sha-line">
+          <div class="row"><span class="machine">single · Metal</span><span class="hash">sha256 44e72049…</span></div>
+          <div class="row"><span class="machine">split 2× · VGT · CUDA+Metal</span><span class="hash">sha256 44e72049…</span></div>
+          <div class="row"><span class="machine">split + speculative</span><span class="hash">sha256 44e72049…</span></div>
+          <div class="row"><span class="eq">≡ byte-identical</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= BENCHMARKS ================= -->
+<section class="bench" id="benchmarks">
+  <div class="container">
+    <div class="sec-head reveal">
+      <span class="overline">Field-measured</span>
+      <h2>Numbers from real machines, not marketing.</h2>
+      <p>Every figure below is reproduced by the test suite or logged from the hardware named. Nothing is projected.</p>
+    </div>
+    <div class="bench-grid">
+      <div class="bench-tile reveal">
+        <div class="val aqua"><span data-count="104258">0</span><span class="unit"> tokens</span></div>
+        <div class="what">One prompt, one $1/hr GPU. A needle buried 40,000 words deep — retrieved exactly.</div>
+        <div class="how">llama-3.1-8B · single A10G · f16 KV</div>
+      </div>
+      <div class="bench-tile reveal">
+        <div class="val iris">1.49<span class="unit">× prefill</span></div>
+        <div class="what">Pipelined prefill across two machines over plain WiFi — an 8K prompt, 25s → 17s.</div>
+        <div class="how">14-layer split · CUDA + Metal · byte-identical</div>
+      </div>
+      <div class="bench-tile reveal">
+        <div class="val aqua">3<span class="unit">× at 5% loss</span></div>
+        <div class="what">Reed-Solomon parity holds decode at clean-link speed where unprotected UDP collapses.</div>
+        <div class="how">27 vs 9 tok/s · 5% random loss · zero clean-link cost</div>
+      </div>
+      <div class="bench-tile reveal">
+        <div class="val iris">+29<span class="unit">%</span></div>
+        <div class="what">int8 wire encoding on consumer uplinks — decode 61 → 78 tok/s on a 25 Mbit link.</div>
+        <div class="how">opt-in --wire-dtype i8 · labeled, never silent</div>
+      </div>
+      <div class="bench-tile reveal">
+        <div class="val aqua">2<span class="unit">× context</span></div>
+        <div class="what">f16 KV cache doubles the context that fits — 131K tokens where f32 capped at 102K.</div>
+        <div class="how">--kv-dtype f16 · byte-identical goldens held</div>
+      </div>
+      <div class="bench-tile reveal">
+        <div class="val iris">&gt;12K<span class="unit"> ctx</span></div>
+        <div class="what">Where a pooled split overtakes a single machine — KV bandwidth divides across nodes.</div>
+        <div class="how">24 vs 19 tok/s at 16K ctx · 1.5B · 2 machines</div>
+      </div>
+    </div>
+    <p class="bench-note">Distributed results measured over real consumer WiFi between a Mac mini (M4 Pro, Metal) and an RTX laptop (CUDA); long-context results on AWS g5.xlarge. Methodology and raw logs live in the engine's execution log.</p>
+  </div>
+</section>
+
+<!-- ================= MODELS ================= -->
+<section id="models">
+  <div class="container">
+    <div class="sec-head reveal">
+      <span class="overline">Curated catalog</span>
+      <h2>40 models, one command.</h2>
+      <p><span class="mono" style="font-size:14px;color:var(--iris-300)">vectorgrid pull &lt;name&gt;</span> — resolved, downloaded in parallel, SHA-verified, resumable. Or import any GGUF you already have.</p>
+    </div>
+    <div class="chips reveal" aria-label="Supported model families">
+      <span class="chip hl">qwen3 0.6b–14b</span>
+      <span class="chip hl">qwen2.5 0.5b–72b</span>
+      <span class="chip hl">llama 3.1 / 3.2 / 3.3</span>
+      <span class="chip hl">deepseek-r1 distills</span>
+      <span class="chip">gemma 2 + 3</span>
+      <span class="chip">phi-3 / phi-4</span>
+      <span class="chip">mistral · nemo · small</span>
+      <span class="chip">qwen2.5-coder 7b–32b</span>
+      <span class="chip">devstral</span>
+      <span class="chip">glm-4</span>
+      <span class="chip">granite 3.3</span>
+      <span class="chip">smollm2 / smollm3</span>
+      <span class="chip">llava vision</span>
+      <span class="chip">embeddings · bge · nomic</span>
+    </div>
+    <div class="grid-3" style="margin-top:48px">
+      <div class="card reveal">
+        <h3>Speculative decoding</h3>
+        <p>Blessed draft pairs ship in the catalog — <code>--draft-model auto</code> picks a family-matched draft with a verified vocabulary. Byte-identical output, fewer forward passes.</p>
+      </div>
+      <div class="card reveal">
+        <h3>Quantize &amp; import</h3>
+        <p>Bring any GGUF, or quantize your own — Q8_0 to Q4_K and beyond. The engine refuses combinations it can't run faithfully, out loud.</p>
+      </div>
+      <div class="card reveal">
+        <h3>Doctor &amp; analyse</h3>
+        <p><code>vectorgrid doctor</code> diagnoses your setup — firewall, discovery, GPU init, stale downloads — with the exact fix commands. <code>analyse</code> tells you which models fit your hardware, and your pool.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FINAL CTA ================= -->
+<section>
+  <div class="container">
+    <div class="final reveal">
+      <span class="overline">Get started</span>
+      <h2 style="margin-top:12px">Thirty seconds to your first token.</h2>
+      <p>Install, pull a model, talk to it. Everything after that is your business — literally.</p>
+      <div class="install-card">
+        <span class="dollar mono" aria-hidden="true">$</span>
+        <code id="install-cmd-2">curl -sSL https://raw.githubusercontent.com/VectorGrid/vectorgrid/main/install.sh | sh</code>
+        <button class="copy-btn" data-copy="install-cmd-2" aria-label="Copy install command">Copy</button>
+      </div>
+      <div class="cta-row" style="justify-content:center">
+        <a class="btn btn-primary btn-xl" href="https://github.com/VectorGrid/vectorgrid/releases/latest" rel="noopener">Download v0.6.29</a>
+        <a class="btn btn-secondary btn-xl" href="https://github.com/VectorGrid/vectorgrid" rel="noopener">Read the docs</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container foot">
+    <a class="brand" href="#top" style="font-size:15px">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="5" r="2.1" fill="#6E56F7"/><circle cx="12" cy="5" r="2.1" fill="#6E56F7"/><circle cx="19" cy="5" r="2.1" fill="#6E56F7"/><circle cx="5" cy="12" r="2.1" fill="#6E56F7"/><circle cx="12" cy="12" r="2.6" fill="#22E0BE"/><circle cx="19" cy="12" r="2.1" fill="#6E56F7"/><circle cx="5" cy="19" r="2.1" fill="#6E56F7"/><circle cx="12" cy="19" r="2.1" fill="#6E56F7"/><circle cx="19" cy="19" r="2.1" fill="#6E56F7"/></svg>
+      VectorGrid
+    </a>
+    <div class="links">
+      <a href="https://github.com/VectorGrid/vectorgrid" rel="noopener">GitHub</a>
+      <a href="https://github.com/VectorGrid/vectorgrid/releases" rel="noopener">Releases</a>
+      <a href="https://raw.githubusercontent.com/VectorGrid/vectorgrid/main/install.sh" rel="noopener">install.sh</a>
+      <a href="https://github.com/VectorGrid/vectorgrid/blob/main/LICENSE" rel="noopener">MIT License</a>
+    </div>
+    <span class="copy">© 2026 VectorGrid. Your hardware, your tokens.</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- Nav border on scroll ---------- */
+var nav = document.getElementById('nav');
+addEventListener('scroll', function(){ nav.classList.toggle('scrolled', scrollY > 8); }, {passive:true});
+
+/* ---------- Copy buttons ---------- */
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var txt = document.getElementById(btn.dataset.copy).textContent;
+    navigator.clipboard.writeText(txt).then(function(){
+      btn.textContent = 'Copied'; btn.classList.add('copied');
+      setTimeout(function(){ btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  });
+});
+
+/* ---------- Reveal on scroll ---------- */
+var io = new IntersectionObserver(function(entries){
+  entries.forEach(function(e, i){
+    if (e.isIntersecting){
+      var el = e.target;
+      setTimeout(function(){ el.classList.add('in'); }, (el.dataset.stagger||0)*60);
+      io.unobserve(el);
+    }
+  });
+}, {threshold:.15});
+document.querySelectorAll('.reveal').forEach(function(el, i){ io.observe(el); });
+
+/* ---------- Count-up (once, on view; spec §6.3) ---------- */
+function countUp(el){
+  var target = parseInt(el.dataset.count, 10);
+  if (reduced){ el.textContent = target.toLocaleString('en-US'); return; }
+  var t0 = null, dur = 700;
+  function frame(t){
+    if (!t0) t0 = t;
+    var p = Math.min((t - t0)/dur, 1);
+    p = 1 - Math.pow(1 - p, 3); /* ease-out cubic */
+    el.textContent = Math.round(target * p).toLocaleString('en-US');
+    if (p < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+var cio = new IntersectionObserver(function(entries){
+  entries.forEach(function(e){ if (e.isIntersecting){ countUp(e.target); cio.unobserve(e.target); } });
+}, {threshold:.5});
+document.querySelectorAll('[data-count]').forEach(function(el){ cio.observe(el); });
+
+/* ---------- Terminal demo (animates the truth: real commands) ---------- */
+var termBody = document.getElementById('term-body');
+var SCRIPT = [
+  {cmd:'vectorgrid pull qwen2.5-7b-instruct', out:[
+    ['t-out','pulling qwen2.5-7b-instruct · Q4_K_M · 4.68 GB'],
+    ['t-out','████████████████████ 100% · sha256 verified']]},
+  {cmd:'vectorgrid serve --model qwen2.5-7b-instruct', out:[
+    ['t-out','backend: <span class="t-iris">metal</span> · ctx 32768 · OpenAI API on <span class="t-iris">:28100/v1</span>']]},
+  {cmd:'vectorgrid run r1-distill-qwen-14b --pool', out:[
+    ['t-out','discovered 2 workers · split 24/24 over vgt://'],
+    ['t-stream','The grid holds. Layers 0–23 on your PC, 24–47 on the Mac — one model, streaming as if it were local.']]}
+];
+function el(tag, cls, html){ var e = document.createElement(tag); if(cls) e.className = cls; if(html!=null) e.innerHTML = html; return e; }
+function typeLine(cmd, done){
+  var ln = el('div','ln');
+  ln.innerHTML = '<span class="t-dollar">$ </span><span class="t-cmd"></span>';
+  var caret = el('span','caret');
+  ln.appendChild(caret);
+  termBody.appendChild(ln);
+  var span = ln.querySelector('.t-cmd'), i = 0;
+  if (reduced){ span.textContent = cmd; caret.remove(); done(); return; }
+  (function tick(){
+    if (i <= cmd.length){ span.textContent = cmd.slice(0, i); i++; setTimeout(tick, 22 + Math.random()*26); }
+    else { caret.remove(); done(); }
+  })();
+}
+function streamLine(text, done){
+  var ln = el('div','ln t-aqua');
+  var caret = el('span','caret');
+  termBody.appendChild(ln);
+  var words = text.split(' '), i = 0;
+  if (reduced){ ln.textContent = text; done(); return; }
+  (function tick(){
+    if (i < words.length){
+      ln.textContent = words.slice(0, i+1).join(' ') + ' ';
+      ln.appendChild(caret); i++;
+      termBody.scrollTop = termBody.scrollHeight;
+      setTimeout(tick, 60 + Math.random()*70);
+    } else { caret.remove(); done(); }
+  })();
+}
+function runScript(idx){
+  if (idx >= SCRIPT.length){
+    setTimeout(function(){ termBody.innerHTML = ''; runScript(0); }, 7000);
+    return;
+  }
+  var step = SCRIPT[idx];
+  typeLine(step.cmd, function(){
+    var outs = step.out.slice();
+    (function nextOut(){
+      if (!outs.length){ setTimeout(function(){ runScript(idx+1); }, 900); return; }
+      var o = outs.shift();
+      if (o[0] === 't-stream'){ streamLine(o[1], nextOut); }
+      else {
+        setTimeout(function(){
+          termBody.appendChild(el('div','ln '+o[0], o[1]));
+          nextOut();
+        }, 350);
+      }
+    })();
+  });
+}
+var tio = new IntersectionObserver(function(entries){
+  if (entries[0].isIntersecting){ runScript(0); tio.disconnect(); }
+}, {threshold:.3});
+tio.observe(termBody);
+
+/* ---------- Living Grid (Canvas 2D, Tier 1; spec §8) ---------- */
+var canvas = document.getElementById('grid-canvas');
+var ctx = canvas.getContext('2d');
+var nodes = [], edges = [], pulses = [];
+var W = 0, H = 0, DPR = Math.min(devicePixelRatio || 1, 2);
+var mouse = {x:.5, y:.5}, running = false, visible = true;
+var NODE_COUNT = matchMedia('(max-width: 767px)').matches ? 36 : 96;
+
+function seedRand(s){ return function(){ s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+var rand = seedRand(20260827);
+
+function build(){
+  var rect = canvas.parentElement.getBoundingClientRect();
+  W = rect.width; H = rect.height;
+  canvas.width = W * DPR; canvas.height = H * DPR;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  nodes = []; edges = []; pulses = [];
+  rand = seedRand(20260827);
+  for (var i = 0; i < NODE_COUNT; i++){
+    /* denser toward upper-right focal area, sparser at edges */
+    var fx = rand(), fy = rand();
+    if (rand() < .45){ fx = .55 + fx * .45; fy = fy * .6; }
+    nodes.push({
+      x: fx * W, y: fy * H,
+      r: 1.2 + rand() * 2.2,
+      phase: rand() * Math.PI * 2,
+      depth: .4 + rand() * .6
+    });
+  }
+  var THRESH = Math.min(W, H) * .22;
+  for (var a = 0; a < nodes.length; a++){
+    for (var b = a + 1; b < nodes.length; b++){
+      var dx = nodes[a].x - nodes[b].x, dy = nodes[a].y - nodes[b].y;
+      var d = Math.sqrt(dx*dx + dy*dy);
+      if (d < THRESH && rand() < .5) edges.push({a:a, b:b, d:d});
+    }
+  }
+}
+
+function spawnPulse(){
+  if (!edges.length) return;
+  var e = edges[Math.floor(Math.random() * edges.length)];
+  pulses.push({e:e, t:0, dur: 600 + Math.random() * 600, flip: Math.random() < .5});
+}
+
+var lastPulse = 0;
+function draw(t){
+  if (!running) return;
+  ctx.clearRect(0, 0, W, H);
+  var px = (mouse.x - .5) * 12, py = (mouse.y - .5) * 12;
+
+  ctx.lineWidth = 1;
+  for (var i = 0; i < edges.length; i++){
+    var e = edges[i], A = nodes[e.a], B = nodes[e.b];
+    var o = .05 * (1 - e.d / (Math.min(W,H) * .25));
+    ctx.strokeStyle = 'rgba(255,255,255,' + Math.max(o, .015).toFixed(3) + ')';
+    ctx.beginPath();
+    ctx.moveTo(A.x + px * A.depth, A.y + py * A.depth);
+    ctx.lineTo(B.x + px * B.depth, B.y + py * B.depth);
+    ctx.stroke();
+  }
+
+  if (t - lastPulse > 900){ spawnPulse(); lastPulse = t; }
+  for (var p = pulses.length - 1; p >= 0; p--){
+    var pl = pulses[p]; pl.t += 16;
+    var k = pl.t / pl.dur;
+    if (k >= 1){ pulses.splice(p, 1); continue; }
+    var A2 = nodes[pl.flip ? pl.e.b : pl.e.a], B2 = nodes[pl.flip ? pl.e.a : pl.e.b];
+    var x = A2.x + (B2.x - A2.x) * k + px * A2.depth;
+    var y = A2.y + (B2.y - A2.y) * k + py * A2.depth;
+    var fade = k < .2 ? k / .2 : k > .8 ? (1 - k) / .2 : 1;
+    ctx.fillStyle = 'rgba(34,224,190,' + (.8 * fade).toFixed(3) + ')';
+    ctx.beginPath(); ctx.arc(x, y, 1.6, 0, 7); ctx.fill();
+    ctx.fillStyle = 'rgba(34,224,190,' + (.16 * fade).toFixed(3) + ')';
+    ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill();
+  }
+
+  for (var n = 0; n < nodes.length; n++){
+    var nd = nodes[n];
+    var breathe = .6 + .4 * (0.5 + 0.5 * Math.sin(t / 3000 * Math.PI * 2 + nd.phase));
+    var nx = nd.x + px * nd.depth, ny = nd.y + py * nd.depth;
+    var g = ctx.createRadialGradient(nx, ny, 0, nx, ny, nd.r * 6);
+    g.addColorStop(0, 'rgba(110,86,247,' + (.30 * breathe).toFixed(3) + ')');
+    g.addColorStop(1, 'rgba(110,86,247,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(nx, ny, nd.r * 6, 0, 7); ctx.fill();
+    ctx.fillStyle = 'rgba(168,150,255,' + (.55 + .35 * breathe).toFixed(3) + ')';
+    ctx.beginPath(); ctx.arc(nx, ny, nd.r, 0, 7); ctx.fill();
+  }
+  requestAnimationFrame(draw);
+}
+
+function drawStatic(){
+  build();
+  running = true;
+  var hold = requestAnimationFrame; /* draw exactly one frame */
+  ctx.clearRect(0,0,W,H);
+  running = false;
+  /* single static frame: reuse draw body with t fixed */
+  running = true; draw(0); running = false;
+}
+
+build();
+if (reduced){
+  drawStatic();
+  addEventListener('resize', drawStatic);
+} else {
+  running = true;
+  requestAnimationFrame(draw);
+  addEventListener('resize', function(){ build(); });
+  addEventListener('mousemove', function(ev){
+    mouse.x = ev.clientX / innerWidth; mouse.y = ev.clientY / innerHeight;
+  }, {passive:true});
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden){ running = false; }
+    else if (visible){ running = true; requestAnimationFrame(draw); }
+  });
+  var hio = new IntersectionObserver(function(entries){
+    visible = entries[0].isIntersecting;
+    if (!visible){ running = false; }
+    else if (!document.hidden && !running){ running = true; requestAnimationFrame(draw); }
+  });
+  hio.observe(canvas.parentElement);
+}
+})();
+</script>
+</body>
+</html>
