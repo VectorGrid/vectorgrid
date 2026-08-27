@@ -477,6 +477,28 @@ footer{border-top:1px solid var(--border-hairline);padding:48px 0;background:var
   </div>
 </section>
 
+<!-- ================= TELEMETRY ================= -->
+<section id="telemetry" style="background:var(--bg-void)">
+  <div class="container">
+    <div class="sec-head reveal">
+      <span class="overline">Telemetry, in the open</span>
+      <h2>What VectorGrid reports. And what it never can.</h2>
+      <p>Signed-in installs report anonymous usage metadata so we can see what breaks and what matters. The schema is content-free by construction — these fields don't exist in the code, so they can't leak:</p>
+    </div>
+    <div class="grid-2">
+      <div class="card reveal">
+        <h3>Reported</h3>
+        <p>Command used and duration &middot; model <em>alias</em> and speed (tokens/sec, time-to-first-token) &middot; context length &middot; pool size and failover counts &middot; crash location (file:line) with the panic message <em>hashed</em> &middot; version, OS, backend.</p>
+      </div>
+      <div class="card reveal">
+        <h3>Never reported</h3>
+        <p>Prompts &middot; outputs &middot; file names or paths &middot; hostnames or IP addresses &middot; environment variables &middot; panic message text. Batches upload every 15 minutes; offline they wait on disk, capped at 20&nbsp;MB.</p>
+      </div>
+    </div>
+    <p class="bench-note reveal">Inspect the queue any time: <span class="mono" style="color:var(--iris-300)">vectorgrid telemetry status</span> &middot; opt out permanently: <span class="mono" style="color:var(--iris-300)">vectorgrid telemetry off</span> (the local queue is purged).</p>
+  </div>
+</section>
+
 <!-- ================= FINAL CTA ================= -->
 <section>
   <div class="container">
