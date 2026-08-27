@@ -423,16 +423,23 @@ function healthDot(lastSeen){
   var label = age < 864e5 ? "active" : age < 6048e5 ? "recent" : "idle";
   return "<span class='dot' style='background:"+color+"'></span>"+label;
 }
-function identity(r){
+function accountCell(r){
   if (r.email && r.email !== "null") return r.email;
-  return "<span class='mono' title='anonymous install'>" + short(r.install_id) + "…</span>";
+  if (r.sub && r.sub !== "null" && r.sub !== "")
+    return "<span class='mono' title='signed in — sub " + r.sub + "'>" + short(r.sub) + "… (no email)</span>";
+  return "<span style='color:var(--text-tertiary)'>anonymous</span>";
+}
+function installCell(r){
+  return "<span class='mono' title='" + (r.install_id || "") + "' style='cursor:copy' " +
+         "onclick='navigator.clipboard&&navigator.clipboard.writeText(this.title)'>" +
+         short(r.install_id) + "…</span>";
 }
 function loadActors(){
   q("consumers").then(function(rows){
     tbl("t-consumers",
-      [{h:"consumer"},{h:"health"},{h:"last seen"},{h:"platform"},{h:"version"},{h:"sessions",num:1},{h:"tokens",num:1},{h:"decode tok/s",num:1},{h:"failovers",num:1},{h:"crashes",num:1}],
+      [{h:"account"},{h:"install id"},{h:"health"},{h:"last seen"},{h:"platform"},{h:"version"},{h:"sessions",num:1},{h:"tokens",num:1},{h:"decode tok/s",num:1},{h:"failovers",num:1},{h:"crashes",num:1}],
       rows, function(r){
-        return "<tr><td>"+identity(r)+"</td><td>"+healthDot(r.last_seen)+
+        return "<tr><td>"+accountCell(r)+"</td><td>"+installCell(r)+"</td><td>"+healthDot(r.last_seen)+
           "</td><td class='mono'>"+(r.last_seen||"").replace("T"," ").slice(0,16)+
           "</td><td class='mono'>"+(r.os||"?")+"/"+(r.backend||"?")+"</td><td class='mono'>"+(r.version||"?")+
           "</td><td class='mono num'>"+fmt(r.sessions)+"</td><td class='mono num'>"+fmt(r.tokens)+
@@ -443,9 +450,9 @@ function loadActors(){
   });
   q("producers").then(function(rows){
     tbl("t-producers",
-      [{h:"producer"},{h:"health"},{h:"last seen"},{h:"platform"},{h:"version"},{h:"worker starts",num:1},{h:"secure sessions",num:1},{h:"bulk abandons",num:1},{h:"crashes",num:1}],
+      [{h:"account"},{h:"install id"},{h:"health"},{h:"last seen"},{h:"platform"},{h:"version"},{h:"worker starts",num:1},{h:"secure sessions",num:1},{h:"bulk abandons",num:1},{h:"crashes",num:1}],
       rows, function(r){
-        return "<tr><td>"+identity(r)+"</td><td>"+healthDot(r.last_seen)+
+        return "<tr><td>"+accountCell(r)+"</td><td>"+installCell(r)+"</td><td>"+healthDot(r.last_seen)+
           "</td><td class='mono'>"+(r.last_seen||"").replace("T"," ").slice(0,16)+
           "</td><td class='mono'>"+(r.os||"?")+"/"+(r.backend||"?")+"</td><td class='mono'>"+(r.version||"?")+
           "</td><td class='mono num'>"+fmt(r.worker_starts)+"</td><td class='mono num'>"+fmt(r.secure_sessions)+
