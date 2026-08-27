@@ -218,6 +218,7 @@ td.num,th.num{text-align:right}
       <a class="item" href="#/grid" data-view="grid"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.75"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M7.3 10.8l9.4-3.6M7.3 13.2l9.4 3.6"/></svg>Grid</a>
       <a class="item" href="#/sessions" data-view="sessions"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.75"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Sessions</a>
       <a class="item" href="#/usage" data-view="usage"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.75"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Usage</a>
+      <a class="item" href="#/producer" data-view="producer" style="color:var(--gold-400)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.75"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9 10.5c0-1 1.2-1.7 3-1.7s3 .7 3 1.7-1.2 1.4-3 1.7-3 .7-3 1.7 1.2 1.7 3 1.7 3-.7 3-1.7"/></svg>Producer</a>
       <a class="item" href="/docs.html" target="_blank" rel="noopener"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.75"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z"/><path d="M20 17v5H6.5a2.5 2.5 0 0 1 0-5"/></svg>Docs ↗</a>
       <a class="item" href="#/account" data-view="account"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.75"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>Account</a>
     </nav>
@@ -567,6 +568,45 @@ var VIEWS = {
         series:[{type:"bar",barMaxWidth:14,itemStyle:{borderRadius:[0,4,4,0]},
           label:{show:true,position:"right",color:C.tert,fontFamily:"Geist Mono",fontSize:10,formatter:function(p){return fmt(p.value);}},
           data:rows.map(function(r){return n(r.sessions);})}]}));
+    });
+  }},
+  producer: { title:"Producer", render: function(root){
+    root.innerHTML='<div class="kpis" id="p-kpis">'+skel(76)+'</div>'+
+      '<div class="grid"><div class="card w12"><h3 style="color:var(--gold-400)">Your producing machines</h3><div class="tbl-scroll"><table id="p-table"><tr><td>'+skel(30)+'</td></tr></table></div></div>'+
+      '<div class="card w12"><h3>How Vector Points work</h3>'+
+        '<p style="font-size:13.5px;color:var(--text-secondary)">Formula v1 (preview): <span class="mono" style="color:var(--gold-400)">100 pts</span> per day a machine serves as a worker + <span class="mono" style="color:var(--gold-400)">10 pts</span> per secure session served. Computed server-side from the grid\'s telemetry — restart loops earn nothing. Encashment is coming; balances carry forward. <a href="/producers.html" target="_blank" rel="noopener">Full program details ↗</a></p>'+
+        '<div style="margin-top:12px" class="cmdline"><span class="dollar">$</span><code id="pw0">vectorgrid worker --listen vgt://0.0.0.0:19310 --announce</code><button data-copy="pw0">copy</button></div>'+
+      '</div></div>';
+    q("my_producer").then(function(rows){
+      var totalPts=rows.reduce(function(a,r){return a+n(r.points);},0);
+      var totalSessions=rows.reduce(function(a,r){return a+n(r.sessions_served);},0);
+      var totalDays=rows.reduce(function(a,r){return a+n(r.worker_days);},0);
+      el("p-kpis").innerHTML=[
+        [fmt(totalPts),"Vector Points · "+state.days+"d","gold"],
+        [fmt(rows.length),"Producing machines",""],
+        [fmt(totalDays),"Worker days",""],
+        [fmt(totalSessions),"Sessions served","aqua"],
+        ["soon","Encashment",""]
+      ].map(function(d){
+        var cls=d[2]==="gold"?"":d[2];
+        var style=d[2]==="gold"?' style="color:var(--gold-400)"':'';
+        return '<div class="kpi"><div class="v '+cls+'"'+style+'>'+d[0]+'</div><div class="l">'+d[1]+'</div></div>';
+      }).join("");
+      var t=el("p-table");
+      if(!rows.length){
+        t.innerHTML='<tr><td class="empty">No producing machines yet — start a worker and points begin accruing:<br><br><span class="mono" style="color:var(--gold-400)">vectorgrid worker --listen vgt://0.0.0.0:19310 --announce</span></td></tr>';
+        return;
+      }
+      t.innerHTML="<thead><tr>"+["machine","health","points","worker days","sessions served","version","crashes"].map(function(h,i){
+        return "<th"+(i>=2&&i<=4?' class=\"num\"':'')+">"+h+"</th>";}).join("")+"</tr></thead><tbody>"+
+      rows.map(function(r){
+        var live=activeNow(r.last_seen);
+        return "<tr><td>"+machineName(r)+"</td><td><span class='dot' style='background:"+(live?C.aqua:C.tert)+"'></span>"+(live?"serving-capable":"idle")+
+          "</td><td class='mono num' style='color:var(--gold-400)'>"+fmt(r.points)+
+          "</td><td class='mono num'>"+fmt(r.worker_days)+
+          "</td><td class='mono num'>"+fmt(r.sessions_served)+
+          "</td><td class='mono'>v"+(r.version||"?")+
+          "</td><td class='mono'"+(n(r.crashes)>0?" style='color:var(--danger)'":"")+">"+fmt(r.crashes)+"</td></tr>";}).join("")+"</tbody>";
     });
   }},
   account: { title:"Account", render: function(root){
