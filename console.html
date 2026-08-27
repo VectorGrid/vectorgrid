@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VectorGrid — console</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='24' y2='24'%3E%3Cstop stop-color='%238A78FF'/%3E%3Cstop offset='1' stop-color='%2322E0BE'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='5' cy='5' r='2.1' fill='url(%23g)'/%3E%3Ccircle cx='12' cy='5' r='2.1' fill='%236E56F7'/%3E%3Ccircle cx='19' cy='5' r='2.1' fill='url(%23g)'/%3E%3Ccircle cx='5' cy='12' r='2.1' fill='%236E56F7'/%3E%3Ccircle cx='12' cy='12' r='2.6' fill='url(%23g)'/%3E%3Ccircle cx='19' cy='12' r='2.1' fill='%236E56F7'/%3E%3Ccircle cx='5' cy='19' r='2.1' fill='url(%23g)'/%3E%3Ccircle cx='12' cy='19' r='2.1' fill='%236E56F7'/%3E%3Ccircle cx='19' cy='19' r='2.1' fill='url(%23g)'/%3E%3C/svg%3E" />
+<style>
+@font-face{font-family:'Geist';src:url('/fonts/Geist-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'Geist';src:url('/fonts/Geist-Medium.woff2') format('woff2');font-weight:500;font-display:swap}
+@font-face{font-family:'Geist';src:url('/fonts/Geist-SemiBold.woff2') format('woff2');font-weight:600;font-display:swap}
+@font-face{font-family:'Geist Mono';src:url('/fonts/GeistMono-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'Geist Mono';src:url('/fonts/GeistMono-SemiBold.woff2') format('woff2');font-weight:600;font-display:swap}
+:root{
+  --bg-void:#07080B;--bg-base:#0A0C11;--bg-surface:#101319;--bg-raised:#161A23;--bg-overlay:#1E232E;
+  --border-hairline:rgba(255,255,255,.06);--border-subtle:rgba(255,255,255,.10);--border-strong:rgba(255,255,255,.16);
+  --text-primary:#F4F6FB;--text-secondary:#AEB4C2;--text-tertiary:#767D8E;
+  --iris-300:#A896FF;--iris-400:#8A78FF;--iris-500:#6E56F7;
+  --aqua-400:#4CEBCD;--aqua-500:#22E0BE;--gold-400:#FFC24B;
+  --coral:#FF7A8A;--sky:#5AA9FF;--lime:#9BE85C;--danger:#FF5D6C;--success:#2FD98A;
+  --r-sm:8px;--r-md:10px;--r-lg:14px;--r-full:9999px;
+  --font-sans:'Geist',Inter,ui-sans-serif,system-ui,sans-serif;
+  --font-mono:'Geist Mono',ui-monospace,'SF Mono',monospace;
+  --grad-plasma:linear-gradient(135deg,#6E56F7 0%,#22E0BE 100%);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg-base);color:var(--text-primary);font-family:var(--font-sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.mono{font-family:var(--font-mono);font-feature-settings:"tnum" 1}
+a{color:var(--iris-400);text-decoration:none}
+:focus-visible{outline:2px solid var(--iris-500);outline-offset:2px}
+.nav{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:center;gap:20px;padding:0 24px;background:rgba(10,12,17,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-hairline)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px;color:var(--text-primary)}
+.nav .who{margin-left:auto;font-family:var(--font-mono);font-size:12px;color:var(--text-tertiary)}
+.nav button.linkish{background:none;border:none;color:var(--text-tertiary);font-size:12px;cursor:pointer}
+.nav button.linkish:hover{color:var(--text-secondary)}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 24px 64px}
+.controls{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-bottom:16px}
+.seg{display:flex;background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:var(--r-full);padding:2px}
+.seg button{border:none;background:none;color:var(--text-tertiary);font-size:12px;font-weight:500;padding:4px 12px;border-radius:var(--r-full);cursor:pointer;font-family:var(--font-mono)}
+.seg button.on{background:var(--iris-500);color:#fff}
+.refresh{background:var(--bg-surface);border:1px solid var(--border-subtle);color:var(--text-secondary);border-radius:var(--r-md);padding:5px 12px;font-size:12px;cursor:pointer}
+h2{font-size:16px;font-weight:600;margin:28px 0 12px;letter-spacing:.01em}
+h2 .sub{font-size:12px;color:var(--text-tertiary);font-weight:400;margin-left:8px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:var(--r-lg);padding:14px 16px}
+.kpi .v{font-family:var(--font-mono);font-feature-settings:"tnum" 1;font-size:24px;font-weight:600;line-height:1.1}
+.kpi .v.aqua{color:var(--aqua-400)}.kpi .v.iris{color:var(--iris-300)}
+.kpi .l{margin-top:4px;font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.card{background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:var(--r-lg);padding:16px;grid-column:span 6;min-width:0}
+.card.w4{grid-column:span 4}.card.w8{grid-column:span 8}.card.w12{grid-column:span 12}
+@media(max-width:1000px){.card,.card.w4,.card.w8{grid-column:span 12}}
+.card h3{font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:10px}
+.chart{width:100%;height:250px}
+.chart.tall{height:340px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary);padding:8px 10px;border-bottom:1px solid var(--border-subtle);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--border-hairline);color:var(--text-secondary);white-space:nowrap}
+td.mono,th.num{font-family:var(--font-mono);font-feature-settings:"tnum" 1}
+td.num,th.num{text-align:right}
+.tbl-scroll{overflow-x:auto}
+.empty{color:var(--text-tertiary);font-size:13px;padding:20px;text-align:center}
+.dot{display:inline-block;width:7px;height:7px;border-radius:var(--r-full);margin-right:7px;vertical-align:1px}
+.chip{display:inline-block;font-family:var(--font-mono);font-size:10.5px;padding:2px 8px;border-radius:var(--r-full);border:1px solid var(--border-subtle);color:var(--text-secondary);margin-right:4px}
+.chip.iris{color:var(--iris-300);border-color:rgba(110,86,247,.35)}
+.chip.aqua{color:var(--aqua-400);border-color:rgba(34,224,190,.3)}
+.chip.gold{color:var(--gold-400);border-color:rgba(255,194,75,.3)}
+.chip.warn{color:var(--gold-400);border-color:rgba(255,194,75,.4);cursor:help}
+
+/* machine cards */
+.machines{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.machine{background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:var(--r-lg);padding:16px}
+.machine .name{font-weight:600;font-size:14.5px;display:flex;align-items:center;gap:8px}
+.machine .hw{font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);margin:6px 0 10px}
+.machine .meta{font-size:11.5px;color:var(--text-tertiary);display:flex;flex-wrap:wrap;gap:10px}
+.machine .meta b{color:var(--text-secondary);font-weight:500;font-family:var(--font-mono)}
+
+/* commands */
+.cmd-hero{background:linear-gradient(135deg,rgba(110,86,247,.14),rgba(34,224,190,.08));border:1px solid var(--border-hairline);border-radius:var(--r-lg);padding:20px;margin-bottom:14px}
+.cmd-hero .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:12px}
+.cmdline{display:flex;align-items:center;gap:10px;background:rgba(7,8,11,.7);border:1px solid var(--border-hairline);border-radius:var(--r-md);padding:10px 12px}
+.cmdline .dollar{color:var(--aqua-500);font-family:var(--font-mono);user-select:none}
+.cmdline code{flex:1;font-family:var(--font-mono);font-size:12.5px;color:var(--text-primary);overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+.cmdline button{flex-shrink:0;background:var(--bg-raised);border:1px solid var(--border-subtle);color:var(--text-tertiary);border-radius:var(--r-sm);font-size:11px;padding:3px 9px;cursor:pointer}
+.cmdline button:hover{color:var(--text-primary)}
+.cmd-group h4{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-tertiary);margin:14px 0 8px}
+.cmd-row{display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid var(--border-hairline);font-size:13px}
+.cmd-row code{font-family:var(--font-mono);font-size:12.5px;color:var(--iris-300);min-width:340px}
+.cmd-row span{color:var(--text-tertiary);flex:1}
+.cmd-row button{background:none;border:1px solid var(--border-hairline);color:var(--text-tertiary);border-radius:var(--r-sm);font-size:10.5px;padding:2px 8px;cursor:pointer}
+@media(max-width:800px){.cmd-row{flex-wrap:wrap}.cmd-row code{min-width:0}}
+
+/* auth gate */
+.gate{min-height:calc(100vh - 56px);display:flex;align-items:center;justify-content:center;background:
+  radial-gradient(60% 50% at 20% 10%,rgba(110,86,247,.15),transparent 70%),
+  radial-gradient(50% 45% at 85% 20%,rgba(34,224,190,.10),transparent 70%),var(--bg-void)}
+.gate .panel{width:380px;background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:var(--r-lg);padding:28px}
+.gate h1{font-size:20px;margin-bottom:4px}
+.gate p{font-size:13px;color:var(--text-tertiary);margin-bottom:16px}
+.gate label{display:block;font-size:12px;font-weight:500;color:var(--text-secondary);margin:12px 0 4px}
+.gate input{width:100%;height:40px;background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:var(--r-md);color:var(--text-primary);padding:0 12px;font-size:14px;font-family:var(--font-sans)}
+.gate input:focus{border-color:var(--iris-400);outline:none;box-shadow:0 0 0 3px rgba(110,86,247,.18)}
+.gate button.go{width:100%;height:42px;margin-top:18px;background:var(--iris-500);color:#fff;border:none;border-radius:var(--r-md);font-size:14px;font-weight:500;cursor:pointer}
+.gate button.go:hover{background:var(--iris-400)}
+.gate .alt{margin-top:14px;font-size:12.5px;color:var(--text-tertiary);text-align:center}
+.gate .alt a{cursor:pointer}
+.gate .err{margin-top:12px;font-size:12.5px;color:var(--danger);min-height:16px}
+.gate .ok{color:var(--success)}
+.hidden{display:none}
+.loading{opacity:.45;pointer-events:none}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="brand">
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="bg1" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#8A78FF"/><stop offset="1" stop-color="#22E0BE"/></linearGradient></defs><circle cx="5" cy="5" r="2.1" fill="url(#bg1)"/><circle cx="12" cy="5" r="2.1" fill="#6E56F7"/><circle cx="19" cy="5" r="2.1" fill="url(#bg1)"/><circle cx="5" cy="12" r="2.1" fill="#6E56F7"/><circle cx="12" cy="12" r="2.6" fill="url(#bg1)"/><circle cx="19" cy="12" r="2.1" fill="#6E56F7"/><circle cx="5" cy="19" r="2.1" fill="url(#bg1)"/><circle cx="12" cy="19" r="2.1" fill="#6E56F7"/><circle cx="19" cy="19" r="2.1" fill="#6E56F7"/></svg>
+    VectorGrid <span style="color:var(--text-tertiary);font-weight:400">console</span>
+  </span>
+  <a href="/" style="font-size:12px;color:var(--text-tertiary)">vectorgrid.net</a>
+  <span class="who mono" id="who"></span>
+  <button class="linkish hidden" id="logout">sign out</button>
+</nav>
+
+<!-- auth gate: login / signup / verify -->
+<div class="gate" id="gate">
+  <div class="panel">
+    <div id="pane-login">
+      <h1>Your grid, signed in</h1>
+      <p>Machines, sessions, performance — everything your account has run.</p>
+      <form id="login-form">
+        <label for="em">email</label>
+        <input id="em" type="email" autocomplete="username" required />
+        <label for="pw">password</label>
+        <input id="pw" type="password" autocomplete="current-password" required />
+        <button class="go" type="submit">Sign in</button>
+      </form>
+      <div class="alt">No account? <a id="to-signup">Create one</a></div>
+      <div class="err" id="login-err"></div>
+    </div>
+    <div id="pane-signup" class="hidden">
+      <h1>Create your account</h1>
+      <p>One account for every machine you run VectorGrid on.</p>
+      <form id="signup-form">
+        <label for="sname">name</label>
+        <input id="sname" type="text" autocomplete="name" required />
+        <label for="sem">email</label>
+        <input id="sem" type="email" autocomplete="username" required />
+        <label for="spw">password <span style="color:var(--text-tertiary)">(min 8 · upper · lower · number · symbol)</span></label>
+        <input id="spw" type="password" autocomplete="new-password" required />
+        <button class="go" type="submit">Create account</button>
+      </form>
+      <div class="alt">Have an account? <a id="to-login">Sign in</a></div>
+      <div class="err" id="signup-err"></div>
+    </div>
+    <div id="pane-verify" class="hidden">
+      <h1>Check your email</h1>
+      <p>We sent a verification code to <span id="verify-email" class="mono"></span>.</p>
+      <form id="verify-form">
+        <label for="vcode">verification code</label>
+        <input id="vcode" type="text" inputmode="numeric" autocomplete="one-time-code" required />
+        <button class="go" type="submit">Verify &amp; sign in</button>
+      </form>
+      <div class="alt"><a id="resend">Resend code</a></div>
+      <div class="err" id="verify-err"></div>
+    </div>
+  </div>
+</div>
+
+<!-- console -->
+<div id="console" class="hidden">
+  <div class="wrap">
+    <div class="controls">
+      <div class="seg" id="period">
+        <button data-d="7">7d</button>
+        <button data-d="30" class="on">30d</button>
+        <button data-d="90">90d</button>
+      </div>
+      <button class="refresh" id="refresh">refresh</button>
+    </div>
+
+    <div class="kpis" id="kpis"></div>
+
+    <h2>Your machines <span class="sub">every install signed into this account · active = seen in the last 30 minutes</span></h2>
+    <div class="machines" id="machines"><div class="empty">loading…</div></div>
+
+    <h2>Your grid <span class="sub">how your machines connect — edges inferred from your pooled sessions</span></h2>
+    <div class="grid">
+      <div class="card w8"><div class="chart tall" id="c-topology"></div></div>
+      <div class="card w4"><h3>How you run it</h3><div class="chart tall" id="c-modes"></div></div>
+    </div>
+
+    <h2>Usage</h2>
+    <div class="grid">
+      <div class="card w8"><h3>Tokens &amp; sessions / day</h3><div class="chart" id="c-usage"></div></div>
+      <div class="card w4"><h3>Your models</h3><div class="chart" id="c-models"></div></div>
+    </div>
+
+    <h2>Recent sessions</h2>
+    <div class="grid"><div class="card w12"><div class="tbl-scroll"><table id="t-sessions"></table></div></div></div>
+
+    <h2 id="commands">Commands <span class="sub">start with the first three — that's the whole product</span></h2>
+    <div class="cmd-hero">
+      <div style="font-weight:600">Three commands to your first token</div>
+      <div class="steps">
+        <div class="cmdline"><span class="dollar">$</span><code id="cc0">curl -sSL https://raw.githubusercontent.com/VectorGrid/vectorgrid/main/install.sh | sh</code><button data-copy="cc0">copy</button></div>
+        <div class="cmdline"><span class="dollar">$</span><code id="cc1">vectorgrid login</code><button data-copy="cc1">copy</button></div>
+        <div class="cmdline"><span class="dollar">$</span><code id="cc2">vectorgrid</code><button data-copy="cc2">copy</button></div>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:var(--text-tertiary)">That last one opens the agent — chat with a model that can run commands, edit files, and search your code, fully local.</div>
+    </div>
+    <div class="grid"><div class="card w12" id="cmd-list"></div></div>
+  </div>
+</div>
+
+<script src="/echarts.min.js"></script>
+<script>
+(function(){
+"use strict";
+var COGNITO = "https://cognito-idp.ap-south-1.amazonaws.com/";
+var CLIENT_ID = "2jvhanv0lofp9hic1pmdv3ccih";
+var API = "https://jq1c3rvlv7.execute-api.ap-south-1.amazonaws.com/v1/v1/analytics/";
+var LATEST_VERSION = "0.6.30";
+var C = { iris:"#8A78FF", aqua:"#22E0BE", gold:"#FFC24B", coral:"#FF7A8A", sky:"#5AA9FF", lime:"#9BE85C",
+          text:"#AEB4C2", tert:"#767D8E", grid:"rgba(255,255,255,.06)", danger:"#FF5D6C" };
+var PALETTE = [C.iris, C.aqua, C.gold, C.coral, C.sky, C.lime];
+var state = { days: 30, token: sessionStorage.getItem("vg-id-token") || null,
+              email: sessionStorage.getItem("vg-email") || null, charts: {}, pendingPw: null };
+
+/* ---------- cognito ---------- */
+function cog(target, body){
+  return fetch(COGNITO, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-amz-json-1.1",
+               "X-Amz-Target": "AWSCognitoIdentityProviderService." + target },
+    body: JSON.stringify(body)
+  }).then(function(r){ return r.json(); });
+}
+function pane(id){
+  ["pane-login","pane-signup","pane-verify"].forEach(function(p){
+    document.getElementById(p).classList.toggle("hidden", p !== id);
+  });
+}
+function doLogin(email, pw, errEl){
+  return cog("InitiateAuth", { AuthFlow:"USER_PASSWORD_AUTH", ClientId:CLIENT_ID,
+    AuthParameters:{ USERNAME:email, PASSWORD:pw } }).then(function(j){
+    if (j.AuthenticationResult && j.AuthenticationResult.IdToken){
+      state.token = j.AuthenticationResult.IdToken; state.email = email;
+      sessionStorage.setItem("vg-id-token", state.token);
+      sessionStorage.setItem("vg-email", email);
+      showConsole();
+      return true;
+    }
+    var t = (j.__type || "").split("#").pop();
+    if (t === "UserNotConfirmedException"){
+      state.pendingPw = pw;
+      document.getElementById("verify-email").textContent = email;
+      pane("pane-verify");
+      return false;
+    }
+    errEl.textContent = j.message || t || "sign-in failed";
+    return false;
+  }).catch(function(){ errEl.textContent = "network error"; return false; });
+}
+document.getElementById("to-signup").addEventListener("click", function(){ pane("pane-signup"); });
+document.getElementById("to-login").addEventListener("click", function(){ pane("pane-login"); });
+document.getElementById("login-form").addEventListener("submit", function(ev){
+  ev.preventDefault();
+  doLogin(document.getElementById("em").value.trim(), document.getElementById("pw").value,
+          document.getElementById("login-err"));
+});
+document.getElementById("signup-form").addEventListener("submit", function(ev){
+  ev.preventDefault();
+  var name = document.getElementById("sname").value.trim();
+  var email = document.getElementById("sem").value.trim();
+  var pw = document.getElementById("spw").value;
+  var err = document.getElementById("signup-err");
+  err.textContent = "";
+  cog("SignUp", { ClientId:CLIENT_ID, Username:email, Password:pw,
+    UserAttributes:[{Name:"email",Value:email},{Name:"name",Value:name}] })
+  .then(function(j){
+    if (j.UserSub){
+      state.pendingPw = pw; state.email = email;
+      document.getElementById("em").value = email;
+      document.getElementById("verify-email").textContent = email;
+      pane("pane-verify");
+    } else {
+      err.textContent = j.message || (j.__type || "").split("#").pop() || "sign-up failed";
+    }
+  }).catch(function(){ err.textContent = "network error"; });
+});
+document.getElementById("verify-form").addEventListener("submit", function(ev){
+  ev.preventDefault();
+  var email = document.getElementById("verify-email").textContent;
+  var code = document.getElementById("vcode").value.trim();
+  var err = document.getElementById("verify-err");
+  err.textContent = "";
+  cog("ConfirmSignUp", { ClientId:CLIENT_ID, Username:email, ConfirmationCode:code })
+  .then(function(j){
+    if (j.__type){ err.textContent = j.message || j.__type.split("#").pop(); return; }
+    if (state.pendingPw) doLogin(email, state.pendingPw, err);
+    else { pane("pane-login"); }
+  }).catch(function(){ err.textContent = "network error"; });
+});
+document.getElementById("resend").addEventListener("click", function(){
+  var email = document.getElementById("verify-email").textContent;
+  cog("ResendConfirmationCode", { ClientId:CLIENT_ID, Username:email }).then(function(){
+    var err = document.getElementById("verify-err");
+    err.textContent = "code re-sent"; err.classList.add("ok");
+  });
+});
+function signOut(){ sessionStorage.clear(); location.reload(); }
+document.getElementById("logout").addEventListener("click", signOut);
+
+/* ---------- api ---------- */
+function q(name){
+  return fetch(API + name + "?d=" + state.days, { headers:{ Authorization: state.token } })
+    .then(function(r){
+      if (r.status === 401){ signOut(); throw new Error("expired"); }
+      return r.json();
+    }).then(function(j){ return j.rows || []; });
+}
+function n(x){ var v = Number(x); return isFinite(v) ? v : 0; }
+function fmt(x){ return n(x).toLocaleString("en-US"); }
+function chart(id){
+  if (state.charts[id]) return state.charts[id];
+  var ch = echarts.init(document.getElementById(id));
+  state.charts[id] = ch; return ch;
+}
+addEventListener("resize", function(){ Object.keys(state.charts).forEach(function(k){ state.charts[k].resize(); }); });
+var AXIS = { axisLine:{lineStyle:{color:C.grid}}, axisLabel:{color:C.tert,fontFamily:"Geist Mono",fontSize:10},
+             splitLine:{lineStyle:{color:C.grid}}, axisTick:{show:false} };
+function base(o){
+  return Object.assign({ color:PALETTE, textStyle:{fontFamily:"Geist",color:C.text},
+    tooltip:{trigger:"axis",backgroundColor:"#1E232E",borderColor:"rgba(255,255,255,.16)",
+             textStyle:{color:"#F4F6FB",fontSize:12,fontFamily:"Geist Mono"}},
+    grid:{left:44,right:12,top:28,bottom:26},
+    legend:{textStyle:{color:C.tert,fontSize:11},top:0,icon:"circle",itemWidth:8,itemHeight:8}}, o);
+}
+
+/* ---------- console ---------- */
+function machineName(m){
+  return (m.device_name && m.device_name !== "null") ? m.device_name
+       : ((m.os||"machine") + " · " + (m.backend||"?"));
+}
+function activeNow(lastSeen){
+  return (Date.now() - Date.parse(lastSeen || 0)) < 30 * 60000;
+}
+function loadConsole(){
+  q("my_summary").then(function(rows){
+    var k = rows[0] || {};
+    var since = k.first_seen ? k.first_seen.slice(0,10) : "–";
+    var pooledPct = n(k.sessions) > 0 ? Math.round(100 * n(k.pooled_sessions) / n(k.sessions)) + "%" : "–";
+    document.getElementById("kpis").innerHTML = [
+      [fmt(k.machines), "Machines", "iris"],
+      [fmt(k.sessions), "Sessions · " + state.days + "d", ""],
+      [fmt(k.tokens), "Tokens", "aqua"],
+      [pooledPct, "Pooled sessions", "iris"],
+      [since, "Member since", ""],
+    ].map(function(d){
+      return '<div class="kpi"><div class="v '+d[2]+'">'+d[0]+'</div><div class="l">'+d[1]+'</div></div>';
+    }).join("");
+  });
+
+  Promise.all([q("my_machines"), q("my_sessions")]).then(function(res){
+    var machines = res[0], sessions = res[1];
+
+    /* machine cards */
+    var mEl = document.getElementById("machines");
+    if (!machines.length){
+      mEl.innerHTML = '<div class="empty">No machines yet — run <span class="mono" style="color:var(--iris-300)">vectorgrid login</span> on a machine and it appears here.</div>';
+    } else {
+      mEl.innerHTML = machines.map(function(m){
+        var live = activeNow(m.last_seen);
+        var roles = [];
+        if (n(m.driver_runs) > 0) roles.push('<span class="chip iris">driver</span>');
+        if (n(m.serve_runs) > 0) roles.push('<span class="chip gold">server</span>');
+        if (n(m.worker_runs) > 0) roles.push('<span class="chip aqua">worker</span>');
+        var hw = [];
+        if (m.vram_gb && m.vram_gb !== "null") hw.push(n(m.vram_gb).toFixed(0)+" GB VRAM");
+        if (m.ram_gb && m.ram_gb !== "null" && n(m.ram_gb)>0) hw.push(n(m.ram_gb).toFixed(0)+" GB RAM");
+        if (m.cpu_cores && n(m.cpu_cores)>0) hw.push(fmt(m.cpu_cores)+" cores");
+        var ver = m.version || "?";
+        var upgrade = ver !== LATEST_VERSION
+          ? ' <span class="chip warn" title="latest is '+LATEST_VERSION+' — run: vectorgrid update">update available</span>' : '';
+        return '<div class="machine">' +
+          '<div class="name"><span class="dot" style="background:'+(live?C.aqua:C.tert)+'"></span>' +
+            machineName(m) + (live?' <span class="chip aqua">active now</span>':'') + '</div>' +
+          '<div class="hw">'+(hw.join(" · ")||"hardware not reported yet")+'</div>' +
+          '<div style="margin-bottom:8px">'+roles.join("")+'<span class="chip">'+(m.os||"?")+'/'+(m.backend||"?")+
+            (m.os_version && m.os_version!=="null" && m.os_version!=="" ? " "+m.os_version : "")+'</span>' +
+            '<span class="chip">v'+ver+'</span>'+upgrade+'</div>' +
+          '<div class="meta">' +
+            '<span>last seen <b>'+(m.last_seen||"").replace("T"," ").slice(5,16)+'</b></span>' +
+            '<span>sessions <b>'+fmt(m.sessions)+'</b></span>' +
+            '<span>tokens <b>'+fmt(m.tokens)+'</b></span>' +
+            '<span>pooled <b>'+fmt(m.pooled_sessions)+'</b></span>' +
+            (n(m.crashes)>0?'<span style="color:var(--danger)">crashes <b>'+fmt(m.crashes)+'</b></span>':'') +
+          '</div></div>';
+      }).join("");
+    }
+
+    /* topology: machines as nodes; pooled sessions draw edges from the
+       driver machine to worker-role machines (or phantom peers). */
+    var nodes = machines.map(function(m, i){
+      var live = activeNow(m.last_seen);
+      return { id: m.install_id, name: machineName(m),
+        symbolSize: 34 + Math.min(26, n(m.sessions)),
+        itemStyle: { color: n(m.worker_runs) > 0 ? C.aqua : C.iris,
+                     shadowBlur: live ? 18 : 0, shadowColor: "rgba(34,224,190,.6)" },
+        label: { color: "#F4F6FB", fontSize: 11, fontFamily: "Geist" } };
+    });
+    var edges = [], phantom = 0;
+    var pooled = sessions.filter(function(s){ return s.pool_size && s.pool_size !== "null" && n(s.pool_size) > 1; });
+    var workerMachines = machines.filter(function(m){ return n(m.worker_runs) > 0; });
+    pooled.slice(0, 6).forEach(function(s){
+      var peers = n(s.pool_size) - 1;
+      var label = (s.gpu_split && s.gpu_split!=="null" ? s.gpu_split+" · " : "") + n(s.decode_tps).toFixed(1)+" tok/s";
+      for (var i = 0; i < peers; i++){
+        var target;
+        if (workerMachines[i] && workerMachines[i].install_id !== s.install_id){
+          target = workerMachines[i].install_id;
+        } else {
+          var pid = "peer-" + (++phantom);
+          nodes.push({ id: pid, name: "pooled peer", symbolSize: 26,
+            itemStyle: { color: "rgba(168,150,255,.5)" },
+            label: { color: C.tert, fontSize: 10 } });
+          target = pid;
+        }
+        edges.push({ source: s.install_id, target: target,
+          label: { show: true, formatter: label, color: C.tert, fontSize: 9.5, fontFamily: "Geist Mono" },
+          lineStyle: { color: C.aqua, width: 1.6, curveness: 0.15, opacity: .7 } });
+      }
+    });
+    var topoOpt = {
+      backgroundColor: "transparent",
+      tooltip: { backgroundColor:"#1E232E", textStyle:{color:"#F4F6FB",fontSize:12} },
+      series: [{ type:"graph", layout:"force", roam:true, draggable:true,
+        force:{ repulsion:900, edgeLength:170, gravity:.08 },
+        data:nodes, links:edges,
+        label:{ show:true, position:"bottom" },
+        emphasis:{ focus:"adjacency" },
+        lineStyle:{ color:C.aqua },
+        effect: undefined }]
+    };
+    if (!nodes.length){
+      document.getElementById("c-topology").innerHTML =
+        '<div class="empty" style="padding-top:120px">Your grid appears here once a machine signs in.</div>';
+    } else {
+      chart("c-topology").setOption(topoOpt);
+    }
+
+    /* sessions table */
+    var t = document.getElementById("t-sessions");
+    if (!sessions.length){
+      t.innerHTML = '<tr><td class="empty">No sessions in this period — run <span class="mono">vectorgrid run &lt;model&gt; -p "hello"</span></td></tr>';
+    } else {
+      t.innerHTML = "<thead><tr>" +
+        ["when","model","mode","how","tokens in/out","decode tok/s","ttft","ctx","failovers","finish"].map(function(h,i){
+          return "<th"+(i>=4&&i<=8?' class="num"':'')+">"+h+"</th>";
+        }).join("") + "</tr></thead><tbody>" +
+        sessions.map(function(s){
+          var pooled = s.pool_size && s.pool_size !== "null" && n(s.pool_size) > 1;
+          var how = pooled
+            ? '<span class="chip aqua">pooled ×'+s.pool_size+(s.gpu_split&&s.gpu_split!=="null"?' · '+s.gpu_split:'')+'</span>'
+            : '<span class="chip">local</span>';
+          return "<tr><td class='mono'>"+(s.ts_utc||"").replace("T"," ").slice(5,16)+
+            "</td><td class='mono'>"+(s.model_alias||"?")+
+            "</td><td class='mono'>"+(s.mode||"?")+
+            "</td><td>"+how+
+            "</td><td class='mono num'>"+fmt(s.prompt_tokens)+" / "+fmt(s.completion_tokens)+
+            "</td><td class='mono num'>"+n(s.decode_tps).toFixed(1)+
+            "</td><td class='mono num'>"+fmt(Math.round(n(s.ttft_ms)))+"ms"+
+            "</td><td class='mono num'>"+fmt(s.ctx_granted)+
+            "</td><td class='mono num'"+(n(s.failovers)>0?" style='color:var(--gold-400)'":"")+">"+fmt(s.failovers)+
+            "</td><td class='mono'>"+(s.finish_reason||"?")+"</td></tr>";
+        }).join("") + "</tbody>";
+    }
+
+    /* modes donut */
+    var pooledCount = pooled.length, localCount = sessions.length - pooledCount;
+    chart("c-modes").setOption({
+      backgroundColor:"transparent", textStyle:{fontFamily:"Geist",color:C.text},
+      tooltip:{ backgroundColor:"#1E232E", textStyle:{color:"#F4F6FB"} },
+      series:[{ type:"pie", radius:["50%","74%"], itemStyle:{borderColor:"#101319",borderWidth:2},
+        label:{ color:C.text, fontSize:12, formatter:"{b}\n{c}" },
+        data:[ { name:"local (this machine)", value:localCount, itemStyle:{color:C.iris} },
+               { name:"pooled (multi-machine)", value:pooledCount, itemStyle:{color:C.aqua} } ] }]
+    });
+  });
+
+  q("my_usage_daily").then(function(rows){
+    chart("c-usage").setOption(base({
+      xAxis:Object.assign({type:"category",data:rows.map(function(r){return r.dt;})},AXIS),
+      yAxis:[Object.assign({type:"value"},AXIS),Object.assign({type:"value",minInterval:1},AXIS)],
+      series:[
+        {name:"tokens",type:"line",smooth:true,symbol:"none",areaStyle:{opacity:.15},
+         data:rows.map(function(r){return n(r.tokens);})},
+        {name:"sessions",type:"bar",yAxisIndex:1,barMaxWidth:16,itemStyle:{color:C.aqua},
+         data:rows.map(function(r){return n(r.sessions);})}
+      ]}));
+  });
+  q("my_models").then(function(rows){
+    rows.reverse();
+    chart("c-models").setOption(base({
+      legend:{show:false}, grid:{left:150,right:30,top:8,bottom:26},
+      xAxis:Object.assign({type:"value"},AXIS),
+      yAxis:Object.assign({type:"category",data:rows.map(function(r){return r.model_alias;})},AXIS,
+        {axisLabel:{color:C.text,fontFamily:"Geist Mono",fontSize:11}}),
+      series:[{type:"bar",barMaxWidth:14,itemStyle:{borderRadius:[0,4,4,0]},
+        label:{show:true,position:"right",color:C.tert,fontFamily:"Geist Mono",fontSize:10,
+          formatter:function(p){return fmt(p.value)+" sess";}},
+        data:rows.map(function(r){return n(r.sessions);})}]
+    }));
+  });
+
+  renderCommands();
+}
+
+/* ---------- command reference ---------- */
+var COMMANDS = [
+  ["Everyday", [
+    ["vectorgrid", "open the agent — chat with a model that can do things on your machine"],
+    ["vectorgrid run <model> -p \"prompt\"", "one-shot generation with any model"],
+    ["vectorgrid run <model>", "interactive chat in the terminal"],
+    ["vectorgrid pull <model>", "download a model (resumable, parallel, verified)"],
+    ["vectorgrid list", "what's installed on this machine"]
+  ]],
+  ["Serve an API", [
+    ["vectorgrid serve --model <model>", "OpenAI-compatible API on :28100 — point any client at /v1"],
+    ["vectorgrid daemon start --model <model>", "run the server in the background"],
+    ["vectorgrid ps", "is the server up, what's loaded"],
+    ["vectorgrid daemon stop", "stop the background server"]
+  ]],
+  ["Pool your machines", [
+    ["vectorgrid worker --listen vgt://0.0.0.0:19310 --announce", "offer this machine's compute to your LAN"],
+    ["vectorgrid run <model> --pool", "auto-discover workers and split the model across machines"],
+    ["vectorgrid run <model> --nodes vgt://host:19310", "pool with explicit machines"],
+    ["vectorgrid run <model> --pool --kv-dtype f16", "double the context that fits (labeled non-exact)"]
+  ]],
+  ["Account & telemetry", [
+    ["vectorgrid whoami", "which account this machine is signed into"],
+    ["vectorgrid logout", "sign out and remove stored credentials"],
+    ["vectorgrid telemetry status", "exactly what's queued to report — and how to turn it off"]
+  ]],
+  ["When something's wrong", [
+    ["vectorgrid doctor", "diagnose install, GPU, network and discovery — with exact fixes"],
+    ["vectorgrid analyse", "which models fit this machine (and your pool)"],
+    ["vectorgrid update", "self-update to the latest release"]
+  ]]
+];
+function renderCommands(){
+  var el = document.getElementById("cmd-list");
+  var i = 0;
+  el.innerHTML = COMMANDS.map(function(g){
+    return '<div class="cmd-group"><h4>'+g[0]+'</h4>' + g[1].map(function(c){
+      var id = "cmd-" + (i++);
+      return '<div class="cmd-row"><code id="'+id+'">'+c[0].replace(/</g,"&lt;").replace(/>/g,"&gt;")+'</code>'+
+             '<span>'+c[1]+'</span><button data-copy="'+id+'">copy</button></div>';
+    }).join("") + '</div>';
+  }).join("");
+}
+document.addEventListener("click", function(ev){
+  var b = ev.target.closest("[data-copy]");
+  if (!b) return;
+  var el = document.getElementById(b.dataset.copy);
+  navigator.clipboard.writeText(el.textContent).then(function(){
+    b.textContent = "copied"; setTimeout(function(){ b.textContent = "copy"; }, 1600);
+  });
+});
+
+/* ---------- shell ---------- */
+function showConsole(){
+  document.getElementById("gate").classList.add("hidden");
+  document.getElementById("console").classList.remove("hidden");
+  document.getElementById("who").textContent = state.email || "";
+  document.getElementById("logout").classList.remove("hidden");
+  loadConsole();
+}
+document.querySelectorAll("#period button").forEach(function(b){
+  b.addEventListener("click", function(){
+    document.querySelectorAll("#period button").forEach(function(x){ x.classList.remove("on"); });
+    b.classList.add("on"); state.days = Number(b.dataset.d); loadConsole();
+  });
+});
+document.getElementById("refresh").addEventListener("click", loadConsole);
+if (state.token) showConsole();
+})();
+</script>
+</body>
+</html>
