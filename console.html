@@ -19,30 +19,55 @@
   --iris-300:#A896FF;--iris-400:#8A78FF;--iris-500:#6E56F7;
   --aqua-400:#4CEBCD;--aqua-500:#22E0BE;--gold-400:#FFC24B;
   --coral:#FF7A8A;--sky:#5AA9FF;--lime:#9BE85C;--danger:#FF5D6C;--success:#2FD98A;
-  --r-sm:8px;--r-md:10px;--r-lg:14px;--r-full:9999px;
+  --r-sm:8px;--r-md:10px;--r-lg:14px;--r-xl:20px;--r-full:9999px;
   --font-sans:'Geist',Inter,ui-sans-serif,system-ui,sans-serif;
   --font-mono:'Geist Mono',ui-monospace,'SF Mono',monospace;
-  --grad-plasma:linear-gradient(135deg,#6E56F7 0%,#22E0BE 100%);
+  --e-out:cubic-bezier(.16,1,.3,1);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg-base);color:var(--text-primary);font-family:var(--font-sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
 .mono{font-family:var(--font-mono);font-feature-settings:"tnum" 1}
 a{color:var(--iris-400);text-decoration:none}
 :focus-visible{outline:2px solid var(--iris-500);outline-offset:2px}
-.nav{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:center;gap:20px;padding:0 24px;background:rgba(10,12,17,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-hairline)}
-.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px;color:var(--text-primary)}
-.nav .who{margin-left:auto;font-family:var(--font-mono);font-size:12px;color:var(--text-tertiary)}
-.nav button.linkish{background:none;border:none;color:var(--text-tertiary);font-size:12px;cursor:pointer}
-.nav button.linkish:hover{color:var(--text-secondary)}
-.wrap{max-width:1280px;margin:0 auto;padding:24px 24px 64px}
-.controls{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-bottom:16px}
+.hidden{display:none!important}
+
+/* ── app shell: rail + topbar + view ── */
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+.rail{background:var(--bg-void);border-right:1px solid var(--border-hairline);padding:16px 10px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.rail .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;padding:6px 10px 18px}
+.rail nav{display:flex;flex-direction:column;gap:2px}
+.rail a.item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:var(--r-md);color:var(--text-secondary);font-size:13.5px;font-weight:500;border-left:3px solid transparent;transition:background .14s,color .14s}
+.rail a.item:hover{background:var(--bg-surface);color:var(--text-primary)}
+.rail a.item.active{background:var(--bg-surface);color:var(--text-primary);border-left-color:var(--iris-500)}
+.rail a.item svg{flex-shrink:0;stroke:currentColor}
+.rail .spacer{flex:1}
+.rail .foot{padding:10px 12px;font-size:11.5px;color:var(--text-tertiary)}
+.rail .foot a{color:var(--text-tertiary)}
+.rail .foot a:hover{color:var(--text-secondary)}
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:static;height:auto;flex-direction:row;align-items:center;overflow-x:auto;padding:8px 12px;border-right:0;border-bottom:1px solid var(--border-hairline)}
+  .rail .brand{padding:0 10px 0 0}
+  .rail nav{flex-direction:row}
+  .rail a.item{border-left:0;border-bottom:2px solid transparent;border-radius:var(--r-sm);white-space:nowrap}
+  .rail a.item.active{border-bottom-color:var(--iris-500)}
+  .rail .spacer,.rail .foot{display:none}
+}
+.main{min-width:0}
+.topbar{position:sticky;top:0;z-index:50;height:56px;display:flex;align-items:center;gap:14px;padding:0 22px;background:rgba(10,12,17,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-hairline)}
+.topbar h1{font-size:15.5px;font-weight:600}
+.topbar .who{margin-left:auto;font-family:var(--font-mono);font-size:12px;color:var(--text-tertiary)}
 .seg{display:flex;background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:var(--r-full);padding:2px}
 .seg button{border:none;background:none;color:var(--text-tertiary);font-size:12px;font-weight:500;padding:4px 12px;border-radius:var(--r-full);cursor:pointer;font-family:var(--font-mono)}
 .seg button.on{background:var(--iris-500);color:#fff}
 .refresh{background:var(--bg-surface);border:1px solid var(--border-subtle);color:var(--text-secondary);border-radius:var(--r-md);padding:5px 12px;font-size:12px;cursor:pointer}
-h2{font-size:16px;font-weight:600;margin:28px 0 12px;letter-spacing:.01em}
-h2 .sub{font-size:12px;color:var(--text-tertiary);font-weight:400;margin-left:8px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.refresh:hover{color:var(--text-primary)}
+.view{padding:22px;max-width:1240px;animation:viewin .22s var(--e-out)}
+@keyframes viewin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.view{animation:none}}
+
+/* components */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
 .kpi{background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:var(--r-lg);padding:14px 16px}
 .kpi .v{font-family:var(--font-mono);font-feature-settings:"tnum" 1;font-size:24px;font-weight:600;line-height:1.1}
 .kpi .v.aqua{color:var(--aqua-400)}.kpi .v.iris{color:var(--iris-300)}
@@ -52,83 +77,83 @@ h2 .sub{font-size:12px;color:var(--text-tertiary);font-weight:400;margin-left:8p
 .card.w4{grid-column:span 4}.card.w8{grid-column:span 8}.card.w12{grid-column:span 12}
 @media(max-width:1000px){.card,.card.w4,.card.w8{grid-column:span 12}}
 .card h3{font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:10px}
-.chart{width:100%;height:250px}
-.chart.tall{height:340px}
+.chart{width:100%;height:250px}.chart.tall{height:360px}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary);padding:8px 10px;border-bottom:1px solid var(--border-subtle);white-space:nowrap}
 td{padding:8px 10px;border-bottom:1px solid var(--border-hairline);color:var(--text-secondary);white-space:nowrap}
 td.mono,th.num{font-family:var(--font-mono);font-feature-settings:"tnum" 1}
 td.num,th.num{text-align:right}
 .tbl-scroll{overflow-x:auto}
-.empty{color:var(--text-tertiary);font-size:13px;padding:20px;text-align:center}
+.empty{color:var(--text-tertiary);font-size:13px;padding:22px;text-align:center}
 .dot{display:inline-block;width:7px;height:7px;border-radius:var(--r-full);margin-right:7px;vertical-align:1px}
 .chip{display:inline-block;font-family:var(--font-mono);font-size:10.5px;padding:2px 8px;border-radius:var(--r-full);border:1px solid var(--border-subtle);color:var(--text-secondary);margin-right:4px}
 .chip.iris{color:var(--iris-300);border-color:rgba(110,86,247,.35)}
 .chip.aqua{color:var(--aqua-400);border-color:rgba(34,224,190,.3)}
 .chip.gold{color:var(--gold-400);border-color:rgba(255,194,75,.3)}
 .chip.warn{color:var(--gold-400);border-color:rgba(255,194,75,.4);cursor:help}
-
-/* machine cards */
 .machines{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
 .machine{background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:var(--r-lg);padding:16px}
-.machine .name{font-weight:600;font-size:14.5px;display:flex;align-items:center;gap:8px}
+.machine .name{font-weight:600;font-size:14.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .machine .hw{font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);margin:6px 0 10px}
 .machine .meta{font-size:11.5px;color:var(--text-tertiary);display:flex;flex-wrap:wrap;gap:10px}
 .machine .meta b{color:var(--text-secondary);font-weight:500;font-family:var(--font-mono)}
-
-/* commands */
-.cmd-hero{background:linear-gradient(135deg,rgba(110,86,247,.14),rgba(34,224,190,.08));border:1px solid var(--border-hairline);border-radius:var(--r-lg);padding:20px;margin-bottom:14px}
-.cmd-hero .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:12px}
+.skel{border-radius:var(--r-lg);background:linear-gradient(100deg,var(--bg-surface) 40%,var(--bg-raised) 50%,var(--bg-surface) 60%);background-size:200% 100%;animation:shimmer 1.4s infinite}
+@keyframes shimmer{to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.skel{animation:none}}
 .cmdline{display:flex;align-items:center;gap:10px;background:rgba(7,8,11,.7);border:1px solid var(--border-hairline);border-radius:var(--r-md);padding:10px 12px}
 .cmdline .dollar{color:var(--aqua-500);font-family:var(--font-mono);user-select:none}
 .cmdline code{flex:1;font-family:var(--font-mono);font-size:12.5px;color:var(--text-primary);overflow-x:auto;white-space:nowrap;scrollbar-width:none}
 .cmdline button{flex-shrink:0;background:var(--bg-raised);border:1px solid var(--border-subtle);color:var(--text-tertiary);border-radius:var(--r-sm);font-size:11px;padding:3px 9px;cursor:pointer}
 .cmdline button:hover{color:var(--text-primary)}
-.cmd-group h4{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-tertiary);margin:14px 0 8px}
-.cmd-row{display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid var(--border-hairline);font-size:13px}
-.cmd-row code{font-family:var(--font-mono);font-size:12.5px;color:var(--iris-300);min-width:340px}
-.cmd-row span{color:var(--text-tertiary);flex:1}
-.cmd-row button{background:none;border:1px solid var(--border-hairline);color:var(--text-tertiary);border-radius:var(--r-sm);font-size:10.5px;padding:2px 8px;cursor:pointer}
-@media(max-width:800px){.cmd-row{flex-wrap:wrap}.cmd-row code{min-width:0}}
 
-/* auth gate */
-.gate{min-height:calc(100vh - 56px);display:flex;align-items:center;justify-content:center;background:
+/* gate + onboarding */
+.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;background:
   radial-gradient(60% 50% at 20% 10%,rgba(110,86,247,.15),transparent 70%),
   radial-gradient(50% 45% at 85% 20%,rgba(34,224,190,.10),transparent 70%),var(--bg-void)}
-.gate .panel{width:380px;background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:var(--r-lg);padding:28px}
-.gate h1{font-size:20px;margin-bottom:4px}
-.gate p{font-size:13px;color:var(--text-tertiary);margin-bottom:16px}
-.gate label{display:block;font-size:12px;font-weight:500;color:var(--text-secondary);margin:12px 0 4px}
-.gate input{width:100%;height:40px;background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:var(--r-md);color:var(--text-primary);padding:0 12px;font-size:14px;font-family:var(--font-sans)}
-.gate input:focus{border-color:var(--iris-400);outline:none;box-shadow:0 0 0 3px rgba(110,86,247,.18)}
-.gate button.go{width:100%;height:42px;margin-top:18px;background:var(--iris-500);color:#fff;border:none;border-radius:var(--r-md);font-size:14px;font-weight:500;cursor:pointer}
-.gate button.go:hover{background:var(--iris-400)}
-.gate .alt{margin-top:14px;font-size:12.5px;color:var(--text-tertiary);text-align:center}
-.gate .alt a{cursor:pointer}
-.gate .err{margin-top:12px;font-size:12.5px;color:var(--danger);min-height:16px}
-.gate .ok{color:var(--success)}
-.hidden{display:none}
-.loading{opacity:.45;pointer-events:none}
+.panel{width:400px;max-width:92vw;background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:var(--r-lg);padding:28px}
+.panel h1{font-size:20px;margin-bottom:4px}
+.panel p{font-size:13px;color:var(--text-tertiary);margin-bottom:16px}
+.panel label{display:block;font-size:12px;font-weight:500;color:var(--text-secondary);margin:12px 0 4px}
+.panel input{width:100%;height:40px;background:var(--bg-raised);border:1px solid var(--border-subtle);border-radius:var(--r-md);color:var(--text-primary);padding:0 12px;font-size:14px;font-family:var(--font-sans)}
+.panel input:focus{border-color:var(--iris-400);outline:none;box-shadow:0 0 0 3px rgba(110,86,247,.18)}
+.panel button.go{width:100%;height:42px;margin-top:18px;background:var(--iris-500);color:#fff;border:none;border-radius:var(--r-md);font-size:14px;font-weight:500;cursor:pointer}
+.panel button.go:hover{background:var(--iris-400)}
+.panel .alt{margin-top:14px;font-size:12.5px;color:var(--text-tertiary);text-align:center}
+.panel .alt a{cursor:pointer}
+.panel .err{margin-top:12px;font-size:12.5px;color:var(--danger);min-height:16px}
+.panel .ok{color:var(--success)}
+
+.onb{min-height:100vh;background:
+  radial-gradient(60% 50% at 20% 10%,rgba(110,86,247,.12),transparent 70%),
+  radial-gradient(50% 45% at 85% 20%,rgba(34,224,190,.08),transparent 70%),var(--bg-void);
+  display:flex;align-items:center;justify-content:center;padding:32px}
+.onb .box{width:640px;max-width:94vw;background:var(--bg-surface);border:1px solid var(--border-hairline);border-radius:var(--r-xl);padding:32px}
+.onb .steps{display:flex;gap:8px;margin-bottom:24px}
+.onb .stepdot{height:4px;flex:1;border-radius:var(--r-full);background:var(--bg-raised)}
+.onb .stepdot.done{background:linear-gradient(90deg,#6E56F7,#22E0BE)}
+.onb h1{font-size:22px;margin-bottom:6px}
+.onb .sub{font-size:13.5px;color:var(--text-tertiary);margin-bottom:20px}
+.onb .ostabs{display:flex;gap:6px;margin-bottom:10px}
+.onb .ostabs button{background:var(--bg-raised);border:1px solid var(--border-hairline);color:var(--text-tertiary);border-radius:var(--r-full);font-size:12px;padding:4px 14px;cursor:pointer}
+.onb .ostabs button.on{color:var(--text-primary);border-color:var(--iris-500)}
+.onb .nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:26px}
+.onb .nav-row .skip{background:none;border:none;color:var(--text-tertiary);font-size:12.5px;cursor:pointer}
+.onb .nav-row .next{background:var(--iris-500);color:#fff;border:none;border-radius:var(--r-md);height:40px;padding:0 22px;font-size:14px;font-weight:500;cursor:pointer}
+.onb .nav-row .next:hover{background:var(--iris-400)}
+.pulse{display:inline-block;width:9px;height:9px;border-radius:var(--r-full);background:var(--aqua-500);animation:pul 1.6s ease-in-out infinite;margin-right:9px}
+@keyframes pul{0%,100%{opacity:.4;transform:scale(.9)}50%{opacity:1;transform:scale(1.15)}}
+@media(prefers-reduced-motion:reduce){.pulse{animation:none}}
+.celebrate{border:1px solid rgba(34,224,190,.35);background:rgba(34,224,190,.07);border-radius:var(--r-lg);padding:14px 16px;margin-top:14px;font-size:13.5px}
 </style>
 </head>
 <body>
 
-<nav class="nav">
-  <span class="brand">
-    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="bg1" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#8A78FF"/><stop offset="1" stop-color="#22E0BE"/></linearGradient></defs><circle cx="5" cy="5" r="2.1" fill="url(#bg1)"/><circle cx="12" cy="5" r="2.1" fill="#6E56F7"/><circle cx="19" cy="5" r="2.1" fill="url(#bg1)"/><circle cx="5" cy="12" r="2.1" fill="#6E56F7"/><circle cx="12" cy="12" r="2.6" fill="url(#bg1)"/><circle cx="19" cy="12" r="2.1" fill="#6E56F7"/><circle cx="5" cy="19" r="2.1" fill="url(#bg1)"/><circle cx="12" cy="19" r="2.1" fill="#6E56F7"/><circle cx="19" cy="19" r="2.1" fill="#6E56F7"/></svg>
-    VectorGrid <span style="color:var(--text-tertiary);font-weight:400">console</span>
-  </span>
-  <a href="/" style="font-size:12px;color:var(--text-tertiary)">vectorgrid.net</a>
-  <span class="who mono" id="who"></span>
-  <button class="linkish hidden" id="logout">sign out</button>
-</nav>
-
-<!-- auth gate: login / signup / verify -->
+<!-- ═══ AUTH GATE ═══ -->
 <div class="gate" id="gate">
   <div class="panel">
     <div id="pane-login">
       <h1>Your grid, signed in</h1>
-      <p>Machines, sessions, performance — everything your account has run.</p>
+      <p>Machines, sessions, performance — everything your account runs.</p>
       <form id="login-form">
         <label for="em">email</label>
         <input id="em" type="email" autocomplete="username" required />
@@ -136,7 +161,7 @@ td.num,th.num{text-align:right}
         <input id="pw" type="password" autocomplete="current-password" required />
         <button class="go" type="submit">Sign in</button>
       </form>
-      <div class="alt">No account? <a id="to-signup">Create one</a></div>
+      <div class="alt">New to VectorGrid? <a id="to-signup">Create an account</a></div>
       <div class="err" id="login-err"></div>
     </div>
     <div id="pane-signup" class="hidden">
@@ -160,7 +185,7 @@ td.num,th.num{text-align:right}
       <form id="verify-form">
         <label for="vcode">verification code</label>
         <input id="vcode" type="text" inputmode="numeric" autocomplete="one-time-code" required />
-        <button class="go" type="submit">Verify &amp; sign in</button>
+        <button class="go" type="submit">Verify &amp; continue</button>
       </form>
       <div class="alt"><a id="resend">Resend code</a></div>
       <div class="err" id="verify-err"></div>
@@ -168,49 +193,52 @@ td.num,th.num{text-align:right}
   </div>
 </div>
 
-<!-- console -->
-<div id="console" class="hidden">
-  <div class="wrap">
-    <div class="controls">
+<!-- ═══ ONBOARDING ═══ -->
+<div class="onb hidden" id="onb">
+  <div class="box">
+    <div class="steps" id="onb-steps"></div>
+    <div id="onb-body"></div>
+    <div class="nav-row">
+      <button class="skip" id="onb-skip">skip setup — take me to the console</button>
+      <button class="next" id="onb-next">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ APP SHELL ═══ -->
+<div class="shell hidden" id="app">
+  <aside class="rail">
+    <span class="brand">
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="bg1" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#8A78FF"/><stop offset="1" stop-color="#22E0BE"/></linearGradient></defs><circle cx="5" cy="5" r="2.1" fill="url(#bg1)"/><circle cx="12" cy="5" r="2.1" fill="#6E56F7"/><circle cx="19" cy="5" r="2.1" fill="url(#bg1)"/><circle cx="5" cy="12" r="2.1" fill="#6E56F7"/><circle cx="12" cy="12" r="2.6" fill="url(#bg1)"/><circle cx="19" cy="12" r="2.1" fill="#6E56F7"/><circle cx="5" cy="19" r="2.1" fill="url(#bg1)"/><circle cx="12" cy="19" r="2.1" fill="#6E56F7"/><circle cx="19" cy="19" r="2.1" fill="#6E56F7"/></svg>
+      VectorGrid
+    </span>
+    <nav id="rail-nav">
+      <a class="item" href="#/overview" data-view="overview"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.75"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Overview</a>
+      <a class="item" href="#/machines" data-view="machines"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.75"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg>Machines</a>
+      <a class="item" href="#/grid" data-view="grid"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.75"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M7.3 10.8l9.4-3.6M7.3 13.2l9.4 3.6"/></svg>Grid</a>
+      <a class="item" href="#/sessions" data-view="sessions"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.75"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Sessions</a>
+      <a class="item" href="#/usage" data-view="usage"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.75"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Usage</a>
+      <a class="item" href="/docs.html" target="_blank" rel="noopener"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.75"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z"/><path d="M20 17v5H6.5a2.5 2.5 0 0 1 0-5"/></svg>Docs ↗</a>
+      <a class="item" href="#/account" data-view="account"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.75"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>Account</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="foot">
+      <a id="rerun-onb" style="cursor:pointer">setup guide</a> · <a href="/" >vectorgrid.net</a>
+    </div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <h1 id="view-title">Overview</h1>
       <div class="seg" id="period">
         <button data-d="7">7d</button>
         <button data-d="30" class="on">30d</button>
         <button data-d="90">90d</button>
       </div>
       <button class="refresh" id="refresh">refresh</button>
+      <span class="who mono" id="who"></span>
+      <button class="refresh" id="logout">sign out</button>
     </div>
-
-    <div class="kpis" id="kpis"></div>
-
-    <h2>Your machines <span class="sub">every install signed into this account · active = seen in the last 30 minutes</span></h2>
-    <div class="machines" id="machines"><div class="empty">loading…</div></div>
-
-    <h2>Your grid <span class="sub">how your machines connect — edges inferred from your pooled sessions</span></h2>
-    <div class="grid">
-      <div class="card w8"><div class="chart tall" id="c-topology"></div></div>
-      <div class="card w4"><h3>How you run it</h3><div class="chart tall" id="c-modes"></div></div>
-    </div>
-
-    <h2>Usage</h2>
-    <div class="grid">
-      <div class="card w8"><h3>Tokens &amp; sessions / day</h3><div class="chart" id="c-usage"></div></div>
-      <div class="card w4"><h3>Your models</h3><div class="chart" id="c-models"></div></div>
-    </div>
-
-    <h2>Recent sessions</h2>
-    <div class="grid"><div class="card w12"><div class="tbl-scroll"><table id="t-sessions"></table></div></div></div>
-
-    <h2 id="commands">Commands <span class="sub">start with the first three — that's the whole product</span></h2>
-    <div class="cmd-hero">
-      <div style="font-weight:600">Three commands to your first token</div>
-      <div class="steps">
-        <div class="cmdline"><span class="dollar">$</span><code id="cc0">curl -sSL https://raw.githubusercontent.com/VectorGrid/vectorgrid/main/install.sh | sh</code><button data-copy="cc0">copy</button></div>
-        <div class="cmdline"><span class="dollar">$</span><code id="cc1">vectorgrid login</code><button data-copy="cc1">copy</button></div>
-        <div class="cmdline"><span class="dollar">$</span><code id="cc2">vectorgrid</code><button data-copy="cc2">copy</button></div>
-      </div>
-      <div style="margin-top:10px;font-size:12px;color:var(--text-tertiary)">That last one opens the agent — chat with a model that can run commands, edit files, and search your code, fully local.</div>
-    </div>
-    <div class="grid"><div class="card w12" id="cmd-list"></div></div>
+    <div class="view" id="view-root"></div>
   </div>
 </div>
 
@@ -225,367 +253,384 @@ var LATEST_VERSION = "0.6.30";
 var C = { iris:"#8A78FF", aqua:"#22E0BE", gold:"#FFC24B", coral:"#FF7A8A", sky:"#5AA9FF", lime:"#9BE85C",
           text:"#AEB4C2", tert:"#767D8E", grid:"rgba(255,255,255,.06)", danger:"#FF5D6C" };
 var PALETTE = [C.iris, C.aqua, C.gold, C.coral, C.sky, C.lime];
-var state = { days: 30, token: sessionStorage.getItem("vg-id-token") || null,
-              email: sessionStorage.getItem("vg-email") || null, charts: {}, pendingPw: null };
+var state = { days:30, token:sessionStorage.getItem("vg-id-token")||null,
+              email:sessionStorage.getItem("vg-email")||null,
+              pendingPw:null, charts:{}, cache:{}, view:"overview" };
 
-/* ---------- cognito ---------- */
-function cog(target, body){
-  return fetch(COGNITO, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-amz-json-1.1",
-               "X-Amz-Target": "AWSCognitoIdentityProviderService." + target },
-    body: JSON.stringify(body)
-  }).then(function(r){ return r.json(); });
+/* ───────── util ───────── */
+function n(x){ var v=Number(x); return isFinite(v)?v:0; }
+function fmt(x){ return n(x).toLocaleString("en-US"); }
+function activeNow(t){ return (Date.now()-Date.parse(t||0)) < 30*60000; }
+function machineName(m){ return (m.device_name&&m.device_name!=="null")?m.device_name:((m.os||"machine")+" · "+(m.backend||"?")); }
+function el(id){ return document.getElementById(id); }
+function q(name){
+  var key = name+":"+state.days;
+  if (state.cache[key]) return Promise.resolve(state.cache[key]);
+  return fetch(API+name+"?d="+state.days,{headers:{Authorization:state.token}})
+    .then(function(r){ if(r.status===401){signOut();throw new Error("expired");} return r.json(); })
+    .then(function(j){ state.cache[key]=j.rows||[]; return state.cache[key]; });
 }
-function pane(id){
-  ["pane-login","pane-signup","pane-verify"].forEach(function(p){
-    document.getElementById(p).classList.toggle("hidden", p !== id);
+function clearCache(){ state.cache={}; Object.keys(state.charts).forEach(function(k){ state.charts[k].dispose(); }); state.charts={}; }
+function chart(id){
+  if(state.charts[id]) return state.charts[id];
+  var c = echarts.init(el(id)); state.charts[id]=c; return c;
+}
+addEventListener("resize",function(){ Object.keys(state.charts).forEach(function(k){ state.charts[k].resize(); }); });
+var AXIS={axisLine:{lineStyle:{color:C.grid}},axisLabel:{color:C.tert,fontFamily:"Geist Mono",fontSize:10},splitLine:{lineStyle:{color:C.grid}},axisTick:{show:false}};
+function base(o){return Object.assign({color:PALETTE,textStyle:{fontFamily:"Geist",color:C.text},
+  tooltip:{trigger:"axis",backgroundColor:"#1E232E",borderColor:"rgba(255,255,255,.16)",textStyle:{color:"#F4F6FB",fontSize:12,fontFamily:"Geist Mono"}},
+  grid:{left:44,right:14,top:28,bottom:26},
+  legend:{textStyle:{color:C.tert,fontSize:11},top:0,icon:"circle",itemWidth:8,itemHeight:8}},o);}
+function skel(h){ return '<div class="skel" style="height:'+h+'px"></div>'; }
+document.addEventListener("click",function(ev){
+  var b=ev.target.closest("[data-copy]"); if(!b) return;
+  navigator.clipboard.writeText(el(b.dataset.copy).textContent).then(function(){
+    b.textContent="copied"; setTimeout(function(){b.textContent="copy";},1600);
   });
-}
-function doLogin(email, pw, errEl){
-  return cog("InitiateAuth", { AuthFlow:"USER_PASSWORD_AUTH", ClientId:CLIENT_ID,
-    AuthParameters:{ USERNAME:email, PASSWORD:pw } }).then(function(j){
-    if (j.AuthenticationResult && j.AuthenticationResult.IdToken){
-      state.token = j.AuthenticationResult.IdToken; state.email = email;
-      sessionStorage.setItem("vg-id-token", state.token);
-      sessionStorage.setItem("vg-email", email);
-      showConsole();
+});
+
+/* ───────── cognito ───────── */
+function cog(t,b){return fetch(COGNITO,{method:"POST",headers:{"Content-Type":"application/x-amz-json-1.1","X-Amz-Target":"AWSCognitoIdentityProviderService."+t},body:JSON.stringify(b)}).then(function(r){return r.json();});}
+function pane(id){["pane-login","pane-signup","pane-verify"].forEach(function(p){el(p).classList.toggle("hidden",p!==id);});}
+function doLogin(email,pw,errEl,thenOnboard){
+  return cog("InitiateAuth",{AuthFlow:"USER_PASSWORD_AUTH",ClientId:CLIENT_ID,AuthParameters:{USERNAME:email,PASSWORD:pw}}).then(function(j){
+    if(j.AuthenticationResult&&j.AuthenticationResult.IdToken){
+      state.token=j.AuthenticationResult.IdToken; state.email=email;
+      sessionStorage.setItem("vg-id-token",state.token); sessionStorage.setItem("vg-email",email);
+      enter(thenOnboard);
       return true;
     }
-    var t = (j.__type || "").split("#").pop();
-    if (t === "UserNotConfirmedException"){
-      state.pendingPw = pw;
-      document.getElementById("verify-email").textContent = email;
-      pane("pane-verify");
-      return false;
-    }
-    errEl.textContent = j.message || t || "sign-in failed";
-    return false;
-  }).catch(function(){ errEl.textContent = "network error"; return false; });
+    var t=(j.__type||"").split("#").pop();
+    if(t==="UserNotConfirmedException"){ state.pendingPw=pw; el("verify-email").textContent=email; pane("pane-verify"); return false; }
+    errEl.textContent=j.message||t||"sign-in failed"; return false;
+  }).catch(function(){ errEl.textContent="network error"; return false; });
 }
-document.getElementById("to-signup").addEventListener("click", function(){ pane("pane-signup"); });
-document.getElementById("to-login").addEventListener("click", function(){ pane("pane-login"); });
-document.getElementById("login-form").addEventListener("submit", function(ev){
-  ev.preventDefault();
-  doLogin(document.getElementById("em").value.trim(), document.getElementById("pw").value,
-          document.getElementById("login-err"));
-});
-document.getElementById("signup-form").addEventListener("submit", function(ev){
-  ev.preventDefault();
-  var name = document.getElementById("sname").value.trim();
-  var email = document.getElementById("sem").value.trim();
-  var pw = document.getElementById("spw").value;
-  var err = document.getElementById("signup-err");
-  err.textContent = "";
-  cog("SignUp", { ClientId:CLIENT_ID, Username:email, Password:pw,
-    UserAttributes:[{Name:"email",Value:email},{Name:"name",Value:name}] })
+el("to-signup").addEventListener("click",function(){pane("pane-signup");});
+el("to-login").addEventListener("click",function(){pane("pane-login");});
+el("login-form").addEventListener("submit",function(ev){ev.preventDefault();
+  doLogin(el("em").value.trim(),el("pw").value,el("login-err"),false);});
+el("signup-form").addEventListener("submit",function(ev){ev.preventDefault();
+  var name=el("sname").value.trim(),email=el("sem").value.trim(),pw=el("spw").value,err=el("signup-err");
+  err.textContent="";
+  cog("SignUp",{ClientId:CLIENT_ID,Username:email,Password:pw,UserAttributes:[{Name:"email",Value:email},{Name:"name",Value:name}]})
   .then(function(j){
-    if (j.UserSub){
-      state.pendingPw = pw; state.email = email;
-      document.getElementById("em").value = email;
-      document.getElementById("verify-email").textContent = email;
-      pane("pane-verify");
-    } else {
-      err.textContent = j.message || (j.__type || "").split("#").pop() || "sign-up failed";
-    }
-  }).catch(function(){ err.textContent = "network error"; });
-});
-document.getElementById("verify-form").addEventListener("submit", function(ev){
-  ev.preventDefault();
-  var email = document.getElementById("verify-email").textContent;
-  var code = document.getElementById("vcode").value.trim();
-  var err = document.getElementById("verify-err");
-  err.textContent = "";
-  cog("ConfirmSignUp", { ClientId:CLIENT_ID, Username:email, ConfirmationCode:code })
-  .then(function(j){
-    if (j.__type){ err.textContent = j.message || j.__type.split("#").pop(); return; }
-    if (state.pendingPw) doLogin(email, state.pendingPw, err);
-    else { pane("pane-login"); }
-  }).catch(function(){ err.textContent = "network error"; });
-});
-document.getElementById("resend").addEventListener("click", function(){
-  var email = document.getElementById("verify-email").textContent;
-  cog("ResendConfirmationCode", { ClientId:CLIENT_ID, Username:email }).then(function(){
-    var err = document.getElementById("verify-err");
-    err.textContent = "code re-sent"; err.classList.add("ok");
-  });
-});
-function signOut(){ sessionStorage.clear(); location.reload(); }
-document.getElementById("logout").addEventListener("click", signOut);
+    if(j.UserSub){ state.pendingPw=pw; el("verify-email").textContent=email; pane("pane-verify"); }
+    else err.textContent=j.message||(j.__type||"").split("#").pop()||"sign-up failed";
+  }).catch(function(){err.textContent="network error";});});
+el("verify-form").addEventListener("submit",function(ev){ev.preventDefault();
+  var email=el("verify-email").textContent,code=el("vcode").value.trim(),err=el("verify-err");
+  err.textContent="";
+  cog("ConfirmSignUp",{ClientId:CLIENT_ID,Username:email,ConfirmationCode:code}).then(function(j){
+    if(j.__type){err.textContent=j.message||j.__type.split("#").pop();return;}
+    if(state.pendingPw) doLogin(email,state.pendingPw,err,true); else pane("pane-login");
+  }).catch(function(){err.textContent="network error";});});
+el("resend").addEventListener("click",function(){
+  cog("ResendConfirmationCode",{ClientId:CLIENT_ID,Username:el("verify-email").textContent}).then(function(){
+    var e=el("verify-err"); e.textContent="code re-sent"; e.classList.add("ok");});});
+function signOut(){ sessionStorage.clear(); location.hash=""; location.reload(); }
+el("logout").addEventListener("click",signOut);
 
-/* ---------- api ---------- */
-function q(name){
-  return fetch(API + name + "?d=" + state.days, { headers:{ Authorization: state.token } })
-    .then(function(r){
-      if (r.status === 401){ signOut(); throw new Error("expired"); }
-      return r.json();
-    }).then(function(j){ return j.rows || []; });
+/* ───────── onboarding ───────── */
+var OS = /Mac/i.test(navigator.platform||navigator.userAgent) ? "mac"
+       : /Win/i.test(navigator.platform||navigator.userAgent) ? "windows" : "linux";
+var onbStep = 0, onbPoll = null;
+var INSTALL = {
+  mac: "curl -sSL https://raw.githubusercontent.com/VectorGrid/vectorgrid/main/install.sh | sh",
+  linux: "curl -sSL https://raw.githubusercontent.com/VectorGrid/vectorgrid/main/install.sh | sh",
+  windows: "irm https://raw.githubusercontent.com/VectorGrid/vectorgrid/main/install.ps1 | iex"
+};
+function osTabs(){
+  return '<div class="ostabs">'+["mac","linux","windows"].map(function(o){
+    return '<button data-os="'+o+'" class="'+(o===OS?"on":"")+'">'+(o==="mac"?"macOS":o==="linux"?"Linux":"Windows")+'</button>';
+  }).join("")+'</div>';
 }
-function n(x){ var v = Number(x); return isFinite(v) ? v : 0; }
-function fmt(x){ return n(x).toLocaleString("en-US"); }
-function chart(id){
-  if (state.charts[id]) return state.charts[id];
-  var ch = echarts.init(document.getElementById(id));
-  state.charts[id] = ch; return ch;
-}
-addEventListener("resize", function(){ Object.keys(state.charts).forEach(function(k){ state.charts[k].resize(); }); });
-var AXIS = { axisLine:{lineStyle:{color:C.grid}}, axisLabel:{color:C.tert,fontFamily:"Geist Mono",fontSize:10},
-             splitLine:{lineStyle:{color:C.grid}}, axisTick:{show:false} };
-function base(o){
-  return Object.assign({ color:PALETTE, textStyle:{fontFamily:"Geist",color:C.text},
-    tooltip:{trigger:"axis",backgroundColor:"#1E232E",borderColor:"rgba(255,255,255,.16)",
-             textStyle:{color:"#F4F6FB",fontSize:12,fontFamily:"Geist Mono"}},
-    grid:{left:44,right:12,top:28,bottom:26},
-    legend:{textStyle:{color:C.tert,fontSize:11},top:0,icon:"circle",itemWidth:8,itemHeight:8}}, o);
-}
-
-/* ---------- console ---------- */
-function machineName(m){
-  return (m.device_name && m.device_name !== "null") ? m.device_name
-       : ((m.os||"machine") + " · " + (m.backend||"?"));
-}
-function activeNow(lastSeen){
-  return (Date.now() - Date.parse(lastSeen || 0)) < 30 * 60000;
-}
-function loadConsole(){
-  q("my_summary").then(function(rows){
-    var k = rows[0] || {};
-    var since = k.first_seen ? k.first_seen.slice(0,10) : "–";
-    var pooledPct = n(k.sessions) > 0 ? Math.round(100 * n(k.pooled_sessions) / n(k.sessions)) + "%" : "–";
-    document.getElementById("kpis").innerHTML = [
-      [fmt(k.machines), "Machines", "iris"],
-      [fmt(k.sessions), "Sessions · " + state.days + "d", ""],
-      [fmt(k.tokens), "Tokens", "aqua"],
-      [pooledPct, "Pooled sessions", "iris"],
-      [since, "Member since", ""],
-    ].map(function(d){
-      return '<div class="kpi"><div class="v '+d[2]+'">'+d[0]+'</div><div class="l">'+d[1]+'</div></div>';
-    }).join("");
-  });
-
-  Promise.all([q("my_machines"), q("my_sessions")]).then(function(res){
-    var machines = res[0], sessions = res[1];
-
-    /* machine cards */
-    var mEl = document.getElementById("machines");
-    if (!machines.length){
-      mEl.innerHTML = '<div class="empty">No machines yet — run <span class="mono" style="color:var(--iris-300)">vectorgrid login</span> on a machine and it appears here.</div>';
-    } else {
-      mEl.innerHTML = machines.map(function(m){
-        var live = activeNow(m.last_seen);
-        var roles = [];
-        if (n(m.driver_runs) > 0) roles.push('<span class="chip iris">driver</span>');
-        if (n(m.serve_runs) > 0) roles.push('<span class="chip gold">server</span>');
-        if (n(m.worker_runs) > 0) roles.push('<span class="chip aqua">worker</span>');
-        var hw = [];
-        if (m.vram_gb && m.vram_gb !== "null") hw.push(n(m.vram_gb).toFixed(0)+" GB VRAM");
-        if (m.ram_gb && m.ram_gb !== "null" && n(m.ram_gb)>0) hw.push(n(m.ram_gb).toFixed(0)+" GB RAM");
-        if (m.cpu_cores && n(m.cpu_cores)>0) hw.push(fmt(m.cpu_cores)+" cores");
-        var ver = m.version || "?";
-        var upgrade = ver !== LATEST_VERSION
-          ? ' <span class="chip warn" title="latest is '+LATEST_VERSION+' — run: vectorgrid update">update available</span>' : '';
-        return '<div class="machine">' +
-          '<div class="name"><span class="dot" style="background:'+(live?C.aqua:C.tert)+'"></span>' +
-            machineName(m) + (live?' <span class="chip aqua">active now</span>':'') + '</div>' +
-          '<div class="hw">'+(hw.join(" · ")||"hardware not reported yet")+'</div>' +
-          '<div style="margin-bottom:8px">'+roles.join("")+'<span class="chip">'+(m.os||"?")+'/'+(m.backend||"?")+
-            (m.os_version && m.os_version!=="null" && m.os_version!=="" ? " "+m.os_version : "")+'</span>' +
-            '<span class="chip">v'+ver+'</span>'+upgrade+'</div>' +
-          '<div class="meta">' +
-            '<span>last seen <b>'+(m.last_seen||"").replace("T"," ").slice(5,16)+'</b></span>' +
-            '<span>sessions <b>'+fmt(m.sessions)+'</b></span>' +
-            '<span>tokens <b>'+fmt(m.tokens)+'</b></span>' +
-            '<span>pooled <b>'+fmt(m.pooled_sessions)+'</b></span>' +
-            (n(m.crashes)>0?'<span style="color:var(--danger)">crashes <b>'+fmt(m.crashes)+'</b></span>':'') +
-          '</div></div>';
-      }).join("");
-    }
-
-    /* topology: machines as nodes; pooled sessions draw edges from the
-       driver machine to worker-role machines (or phantom peers). */
-    var nodes = machines.map(function(m, i){
-      var live = activeNow(m.last_seen);
-      return { id: m.install_id, name: machineName(m),
-        symbolSize: 34 + Math.min(26, n(m.sessions)),
-        itemStyle: { color: n(m.worker_runs) > 0 ? C.aqua : C.iris,
-                     shadowBlur: live ? 18 : 0, shadowColor: "rgba(34,224,190,.6)" },
-        label: { color: "#F4F6FB", fontSize: 11, fontFamily: "Geist" } };
-    });
-    var edges = [], phantom = 0;
-    var pooled = sessions.filter(function(s){ return s.pool_size && s.pool_size !== "null" && n(s.pool_size) > 1; });
-    var workerMachines = machines.filter(function(m){ return n(m.worker_runs) > 0; });
-    pooled.slice(0, 6).forEach(function(s){
-      var peers = n(s.pool_size) - 1;
-      var label = (s.gpu_split && s.gpu_split!=="null" ? s.gpu_split+" · " : "") + n(s.decode_tps).toFixed(1)+" tok/s";
-      for (var i = 0; i < peers; i++){
-        var target;
-        if (workerMachines[i] && workerMachines[i].install_id !== s.install_id){
-          target = workerMachines[i].install_id;
-        } else {
-          var pid = "peer-" + (++phantom);
-          nodes.push({ id: pid, name: "pooled peer", symbolSize: 26,
-            itemStyle: { color: "rgba(168,150,255,.5)" },
-            label: { color: C.tert, fontSize: 10 } });
-          target = pid;
-        }
-        edges.push({ source: s.install_id, target: target,
-          label: { show: true, formatter: label, color: C.tert, fontSize: 9.5, fontFamily: "Geist Mono" },
-          lineStyle: { color: C.aqua, width: 1.6, curveness: 0.15, opacity: .7 } });
-      }
-    });
-    var topoOpt = {
-      backgroundColor: "transparent",
-      tooltip: { backgroundColor:"#1E232E", textStyle:{color:"#F4F6FB",fontSize:12} },
-      series: [{ type:"graph", layout:"force", roam:true, draggable:true,
-        force:{ repulsion:900, edgeLength:170, gravity:.08 },
-        data:nodes, links:edges,
-        label:{ show:true, position:"bottom" },
-        emphasis:{ focus:"adjacency" },
-        lineStyle:{ color:C.aqua },
-        effect: undefined }]
-    };
-    if (!nodes.length){
-      document.getElementById("c-topology").innerHTML =
-        '<div class="empty" style="padding-top:120px">Your grid appears here once a machine signs in.</div>';
-    } else {
-      chart("c-topology").setOption(topoOpt);
-    }
-
-    /* sessions table */
-    var t = document.getElementById("t-sessions");
-    if (!sessions.length){
-      t.innerHTML = '<tr><td class="empty">No sessions in this period — run <span class="mono">vectorgrid run &lt;model&gt; -p "hello"</span></td></tr>';
-    } else {
-      t.innerHTML = "<thead><tr>" +
-        ["when","model","mode","how","tokens in/out","decode tok/s","ttft","ctx","failovers","finish"].map(function(h,i){
-          return "<th"+(i>=4&&i<=8?' class="num"':'')+">"+h+"</th>";
-        }).join("") + "</tr></thead><tbody>" +
-        sessions.map(function(s){
-          var pooled = s.pool_size && s.pool_size !== "null" && n(s.pool_size) > 1;
-          var how = pooled
-            ? '<span class="chip aqua">pooled ×'+s.pool_size+(s.gpu_split&&s.gpu_split!=="null"?' · '+s.gpu_split:'')+'</span>'
-            : '<span class="chip">local</span>';
-          return "<tr><td class='mono'>"+(s.ts_utc||"").replace("T"," ").slice(5,16)+
-            "</td><td class='mono'>"+(s.model_alias||"?")+
-            "</td><td class='mono'>"+(s.mode||"?")+
-            "</td><td>"+how+
-            "</td><td class='mono num'>"+fmt(s.prompt_tokens)+" / "+fmt(s.completion_tokens)+
-            "</td><td class='mono num'>"+n(s.decode_tps).toFixed(1)+
-            "</td><td class='mono num'>"+fmt(Math.round(n(s.ttft_ms)))+"ms"+
-            "</td><td class='mono num'>"+fmt(s.ctx_granted)+
-            "</td><td class='mono num'"+(n(s.failovers)>0?" style='color:var(--gold-400)'":"")+">"+fmt(s.failovers)+
-            "</td><td class='mono'>"+(s.finish_reason||"?")+"</td></tr>";
-        }).join("") + "</tbody>";
-    }
-
-    /* modes donut */
-    var pooledCount = pooled.length, localCount = sessions.length - pooledCount;
-    chart("c-modes").setOption({
-      backgroundColor:"transparent", textStyle:{fontFamily:"Geist",color:C.text},
-      tooltip:{ backgroundColor:"#1E232E", textStyle:{color:"#F4F6FB"} },
-      series:[{ type:"pie", radius:["50%","74%"], itemStyle:{borderColor:"#101319",borderWidth:2},
-        label:{ color:C.text, fontSize:12, formatter:"{b}\n{c}" },
-        data:[ { name:"local (this machine)", value:localCount, itemStyle:{color:C.iris} },
-               { name:"pooled (multi-machine)", value:pooledCount, itemStyle:{color:C.aqua} } ] }]
-    });
-  });
-
-  q("my_usage_daily").then(function(rows){
-    chart("c-usage").setOption(base({
-      xAxis:Object.assign({type:"category",data:rows.map(function(r){return r.dt;})},AXIS),
-      yAxis:[Object.assign({type:"value"},AXIS),Object.assign({type:"value",minInterval:1},AXIS)],
-      series:[
-        {name:"tokens",type:"line",smooth:true,symbol:"none",areaStyle:{opacity:.15},
-         data:rows.map(function(r){return n(r.tokens);})},
-        {name:"sessions",type:"bar",yAxisIndex:1,barMaxWidth:16,itemStyle:{color:C.aqua},
-         data:rows.map(function(r){return n(r.sessions);})}
-      ]}));
-  });
-  q("my_models").then(function(rows){
-    rows.reverse();
-    chart("c-models").setOption(base({
-      legend:{show:false}, grid:{left:150,right:30,top:8,bottom:26},
-      xAxis:Object.assign({type:"value"},AXIS),
-      yAxis:Object.assign({type:"category",data:rows.map(function(r){return r.model_alias;})},AXIS,
-        {axisLabel:{color:C.text,fontFamily:"Geist Mono",fontSize:11}}),
-      series:[{type:"bar",barMaxWidth:14,itemStyle:{borderRadius:[0,4,4,0]},
-        label:{show:true,position:"right",color:C.tert,fontFamily:"Geist Mono",fontSize:10,
-          formatter:function(p){return fmt(p.value)+" sess";}},
-        data:rows.map(function(r){return n(r.sessions);})}]
-    }));
-  });
-
-  renderCommands();
-}
-
-/* ---------- command reference ---------- */
-var COMMANDS = [
-  ["Everyday", [
-    ["vectorgrid", "open the agent — chat with a model that can do things on your machine"],
-    ["vectorgrid run <model> -p \"prompt\"", "one-shot generation with any model"],
-    ["vectorgrid run <model>", "interactive chat in the terminal"],
-    ["vectorgrid pull <model>", "download a model (resumable, parallel, verified)"],
-    ["vectorgrid list", "what's installed on this machine"]
-  ]],
-  ["Serve an API", [
-    ["vectorgrid serve --model <model>", "OpenAI-compatible API on :28100 — point any client at /v1"],
-    ["vectorgrid daemon start --model <model>", "run the server in the background"],
-    ["vectorgrid ps", "is the server up, what's loaded"],
-    ["vectorgrid daemon stop", "stop the background server"]
-  ]],
-  ["Pool your machines", [
-    ["vectorgrid worker --listen vgt://0.0.0.0:19310 --announce", "offer this machine's compute to your LAN"],
-    ["vectorgrid run <model> --pool", "auto-discover workers and split the model across machines"],
-    ["vectorgrid run <model> --nodes vgt://host:19310", "pool with explicit machines"],
-    ["vectorgrid run <model> --pool --kv-dtype f16", "double the context that fits (labeled non-exact)"]
-  ]],
-  ["Account & telemetry", [
-    ["vectorgrid whoami", "which account this machine is signed into"],
-    ["vectorgrid logout", "sign out and remove stored credentials"],
-    ["vectorgrid telemetry status", "exactly what's queued to report — and how to turn it off"]
-  ]],
-  ["When something's wrong", [
-    ["vectorgrid doctor", "diagnose install, GPU, network and discovery — with exact fixes"],
-    ["vectorgrid analyse", "which models fit this machine (and your pool)"],
-    ["vectorgrid update", "self-update to the latest release"]
-  ]]
+var ONB = [
+  function(){ return '<h1>Welcome to VectorGrid</h1>'+
+    '<div class="sub">Three steps and your machines start appearing here. Takes about two minutes.</div>'+
+    osTabs()+
+    '<div style="font-weight:600;font-size:13.5px;margin-bottom:8px">1 · Install on your machine</div>'+
+    '<div class="cmdline"><span class="dollar">$</span><code id="onb-install">'+INSTALL[OS]+'</code><button data-copy="onb-install">copy</button></div>'+
+    '<div style="font-size:12px;color:var(--text-tertiary);margin-top:10px">Detects your platform, verifies checksums, adds itself to PATH. No Python, no Docker.</div>'; },
+  function(){ return '<h1>Sign in on the machine</h1>'+
+    '<div class="sub">Connects that machine to this account — its activity shows up here.</div>'+
+    '<div class="cmdline"><span class="dollar">$</span><code id="onb-login">vectorgrid login</code><button data-copy="onb-login">copy</button></div>'+
+    '<div style="font-size:12px;color:var(--text-tertiary);margin-top:10px">Use the same email you just signed up with: <span class="mono">'+ (state.email||"") +'</span>. One time per machine — scripts and services inherit it.</div>'; },
+  function(){ return '<h1>Run something</h1>'+
+    '<div class="sub">The bare command opens the agent — chat with a model that can run commands, edit files, and search your code. Fully local.</div>'+
+    '<div class="cmdline"><span class="dollar">$</span><code id="onb-run">vectorgrid</code><button data-copy="onb-run">copy</button></div>'+
+    '<div style="font-size:12px;color:var(--text-tertiary);margin-top:10px">First run recommends a model that fits your hardware and offers to download it.</div>'; },
+  function(){ return '<h1><span class="pulse"></span>Waiting for your first machine</h1>'+
+    '<div class="sub">Once a command finishes on your machine, it reports in — usually within five minutes (activity uploads when commands complete, and the pipeline batches for a few minutes). This page checks every 30 seconds.</div>'+
+    '<div id="onb-wait-status" style="font-family:var(--font-mono);font-size:12.5px;color:var(--text-tertiary)">listening…</div>'; }
 ];
-function renderCommands(){
-  var el = document.getElementById("cmd-list");
-  var i = 0;
-  el.innerHTML = COMMANDS.map(function(g){
-    return '<div class="cmd-group"><h4>'+g[0]+'</h4>' + g[1].map(function(c){
-      var id = "cmd-" + (i++);
-      return '<div class="cmd-row"><code id="'+id+'">'+c[0].replace(/</g,"&lt;").replace(/>/g,"&gt;")+'</code>'+
-             '<span>'+c[1]+'</span><button data-copy="'+id+'">copy</button></div>';
-    }).join("") + '</div>';
+function renderOnb(){
+  el("onb-steps").innerHTML = ONB.map(function(_,i){
+    return '<div class="stepdot'+(i<=onbStep?" done":"")+'"></div>';
   }).join("");
-}
-document.addEventListener("click", function(ev){
-  var b = ev.target.closest("[data-copy]");
-  if (!b) return;
-  var el = document.getElementById(b.dataset.copy);
-  navigator.clipboard.writeText(el.textContent).then(function(){
-    b.textContent = "copied"; setTimeout(function(){ b.textContent = "copy"; }, 1600);
+  el("onb-body").innerHTML = ONB[onbStep]();
+  el("onb-next").textContent = onbStep===ONB.length-1 ? "Open the console" : "Next";
+  el("onb-body").querySelectorAll(".ostabs button").forEach(function(b){
+    b.addEventListener("click",function(){ OS=b.dataset.os; renderOnb(); });
   });
+  if (onbStep===ONB.length-1){ startOnbPoll(); } else { stopOnbPoll(); }
+}
+function startOnbPoll(){
+  stopOnbPoll();
+  var tick=function(){
+    fetch(API+"my_machines?d=7",{headers:{Authorization:state.token}})
+      .then(function(r){return r.json();}).then(function(j){
+        var rows=j.rows||[];
+        if(rows.length){
+          stopOnbPoll();
+          el("onb-body").innerHTML = '<h1>🎉 '+machineName(rows[0])+' is on the grid</h1>'+
+            '<div class="sub">Your first machine just reported in.</div>'+
+            '<div class="celebrate">Hardware, sessions and performance now flow to this console automatically. Add more machines any time — same two commands.</div>';
+          el("onb-next").textContent="Open the console";
+        } else {
+          el("onb-wait-status").textContent = "listening… last check " + new Date().toLocaleTimeString();
+        }
+      }).catch(function(){});
+  };
+  tick(); onbPoll=setInterval(tick,30000);
+}
+function stopOnbPoll(){ if(onbPoll){clearInterval(onbPoll);onbPoll=null;} }
+el("onb-next").addEventListener("click",function(){
+  if(onbStep < ONB.length-1){ onbStep++; renderOnb(); }
+  else { stopOnbPoll(); showApp(); }
+});
+el("onb-skip").addEventListener("click",function(){ stopOnbPoll(); showApp(); });
+el("rerun-onb").addEventListener("click",function(){
+  el("app").classList.add("hidden"); onbStep=0; el("onb").classList.remove("hidden"); renderOnb();
 });
 
-/* ---------- shell ---------- */
-function showConsole(){
-  document.getElementById("gate").classList.add("hidden");
-  document.getElementById("console").classList.remove("hidden");
-  document.getElementById("who").textContent = state.email || "";
-  document.getElementById("logout").classList.remove("hidden");
-  loadConsole();
+/* ───────── views ───────── */
+var VIEWS = {
+  overview: { title:"Overview", render: function(root){
+    root.innerHTML = '<div class="kpis" id="ov-kpis">'+skel(76)+'</div>'+
+      '<div class="grid">'+
+      '<div class="card w8"><h3>Tokens & sessions / day</h3><div class="chart" id="ov-usage"></div></div>'+
+      '<div class="card w4"><h3>How you run it</h3><div class="chart" id="ov-modes"></div></div>'+
+      '<div class="card w12"><h3>Quick start on a new machine</h3>'+
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px">'+
+        '<div class="cmdline"><span class="dollar">$</span><code id="qc0">'+INSTALL[OS]+'</code><button data-copy="qc0">copy</button></div>'+
+        '<div class="cmdline"><span class="dollar">$</span><code id="qc1">vectorgrid login</code><button data-copy="qc1">copy</button></div>'+
+        '<div class="cmdline"><span class="dollar">$</span><code id="qc2">vectorgrid</code><button data-copy="qc2">copy</button></div>'+
+        '</div></div></div>';
+    q("my_summary").then(function(rows){
+      var k=rows[0]||{};
+      var pooledPct=n(k.sessions)>0?Math.round(100*n(k.pooled_sessions)/n(k.sessions))+"%":"–";
+      el("ov-kpis").innerHTML=[
+        [fmt(k.machines),"Machines","iris"],[fmt(k.sessions),"Sessions · "+state.days+"d",""],
+        [fmt(k.tokens),"Tokens","aqua"],[pooledPct,"Pooled","iris"],
+        [(k.first_seen||"–").slice(0,10),"Member since",""]
+      ].map(function(d){return '<div class="kpi"><div class="v '+d[2]+'">'+d[0]+'</div><div class="l">'+d[1]+'</div></div>';}).join("");
+    });
+    q("my_usage_daily").then(function(rows){
+      chart("ov-usage").setOption(base({
+        xAxis:Object.assign({type:"category",data:rows.map(function(r){return r.dt;})},AXIS),
+        yAxis:[Object.assign({type:"value"},AXIS),Object.assign({type:"value",minInterval:1},AXIS)],
+        series:[
+          {name:"tokens",type:"line",smooth:true,symbol:"none",areaStyle:{opacity:.15},data:rows.map(function(r){return n(r.tokens);})},
+          {name:"sessions",type:"bar",yAxisIndex:1,barMaxWidth:16,itemStyle:{color:C.aqua},data:rows.map(function(r){return n(r.sessions);})}]}));
+    });
+    q("my_sessions").then(function(sessions){
+      var pooled=sessions.filter(function(s){return s.pool_size&&s.pool_size!=="null"&&n(s.pool_size)>1;}).length;
+      chart("ov-modes").setOption({backgroundColor:"transparent",textStyle:{fontFamily:"Geist",color:C.text},
+        tooltip:{backgroundColor:"#1E232E",textStyle:{color:"#F4F6FB"}},
+        series:[{type:"pie",radius:["50%","74%"],itemStyle:{borderColor:"#101319",borderWidth:2},
+          label:{color:C.text,fontSize:12,formatter:"{b}\n{c}"},
+          data:[{name:"local",value:sessions.length-pooled,itemStyle:{color:C.iris}},
+                {name:"pooled",value:pooled,itemStyle:{color:C.aqua}}]}]});
+    });
+  }},
+  machines: { title:"Machines", render: function(root){
+    root.innerHTML='<div class="machines" id="m-list">'+skel(150)+skel(150)+'</div>';
+    q("my_machines").then(function(machines){
+      var mEl=el("m-list");
+      if(!machines.length){ mEl.innerHTML='<div class="empty">No machines yet — run <span class="mono" style="color:var(--iris-300)">vectorgrid login</span> on a machine and it appears here. The <a id="open-setup" style="cursor:pointer">setup guide</a> walks you through it.</div>';
+        var os=el("open-setup"); if(os) os.addEventListener("click",function(){el("rerun-onb").click();});
+        return; }
+      mEl.innerHTML=machines.map(function(m){
+        var live=activeNow(m.last_seen);
+        var roles=[];
+        if(n(m.driver_runs)>0)roles.push('<span class="chip iris">driver</span>');
+        if(n(m.serve_runs)>0)roles.push('<span class="chip gold">server</span>');
+        if(n(m.worker_runs)>0)roles.push('<span class="chip aqua">worker</span>');
+        var hw=[];
+        if(m.vram_gb&&m.vram_gb!=="null")hw.push(n(m.vram_gb).toFixed(0)+" GB VRAM");
+        if(m.ram_gb&&m.ram_gb!=="null"&&n(m.ram_gb)>0)hw.push(n(m.ram_gb).toFixed(0)+" GB RAM");
+        if(m.cpu_cores&&n(m.cpu_cores)>0)hw.push(fmt(m.cpu_cores)+" cores");
+        var ver=m.version||"?";
+        var up=ver!==LATEST_VERSION?' <span class="chip warn" title="latest is '+LATEST_VERSION+' — run: vectorgrid update">update available</span>':'';
+        return '<div class="machine">'+
+          '<div class="name"><span class="dot" style="background:'+(live?C.aqua:C.tert)+'"></span>'+machineName(m)+
+            (live?' <span class="chip aqua">active now</span>':'')+'</div>'+
+          '<div class="hw">'+(hw.join(" · ")||"hardware not reported yet")+'</div>'+
+          '<div style="margin-bottom:8px">'+roles.join("")+'<span class="chip">'+(m.os||"?")+'/'+(m.backend||"?")+
+            (m.os_version&&m.os_version!=="null"&&m.os_version!==""?" "+m.os_version:"")+'</span>'+
+            '<span class="chip">v'+ver+'</span>'+up+'</div>'+
+          '<div class="meta">'+
+            '<span>last seen <b>'+(m.last_seen||"").replace("T"," ").slice(5,16)+'</b></span>'+
+            '<span>sessions <b>'+fmt(m.sessions)+'</b></span>'+
+            '<span>tokens <b>'+fmt(m.tokens)+'</b></span>'+
+            '<span>pooled <b>'+fmt(m.pooled_sessions)+'</b></span>'+
+            (n(m.crashes)>0?'<span style="color:var(--danger)">crashes <b>'+fmt(m.crashes)+'</b></span>':'')+
+          '</div></div>';}).join("");
+    });
+  }},
+  grid: { title:"Grid", render: function(root){
+    root.innerHTML='<div class="grid">'+
+      '<div class="card w12"><h3>How your machines connect <span style="font-weight:400;color:var(--text-tertiary)">· drag to rearrange · edges inferred from your pooled sessions</span></h3><div class="chart tall" id="g-topo"></div></div>'+
+      '<div class="card w12"><h3>Pool a new machine</h3>'+
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px">'+
+        '<div class="cmdline"><span class="dollar">$</span><code id="gp0">vectorgrid worker --listen vgt://0.0.0.0:19310 --announce</code><button data-copy="gp0">copy</button></div>'+
+        '<div class="cmdline"><span class="dollar">$</span><code id="gp1">vectorgrid run r1-distill-qwen-14b --pool</code><button data-copy="gp1">copy</button></div>'+
+        '</div>'+
+        '<div style="font-size:12px;color:var(--text-tertiary);margin-top:10px">First command offers a machine\'s compute to your LAN; second auto-discovers workers and splits the model across them — byte-identical output, encrypted transport, automatic failover.</div>'+
+      '</div></div>';
+    Promise.all([q("my_machines"),q("my_sessions")]).then(function(res){
+      var machines=res[0],sessions=res[1];
+      if(!machines.length){ el("g-topo").innerHTML='<div class="empty" style="padding-top:130px">Your grid appears here once a machine signs in.</div>'; return; }
+      var nodes=machines.map(function(m){
+        var live=activeNow(m.last_seen);
+        return { id:m.install_id, name:machineName(m), symbolSize:36+Math.min(26,n(m.sessions)),
+          itemStyle:{color:n(m.worker_runs)>0?C.aqua:C.iris,shadowBlur:live?18:0,shadowColor:"rgba(34,224,190,.6)"},
+          label:{color:"#F4F6FB",fontSize:11,fontFamily:"Geist"} };});
+      var edges=[],ph=0;
+      var pooled=sessions.filter(function(s){return s.pool_size&&s.pool_size!=="null"&&n(s.pool_size)>1;});
+      var workers=machines.filter(function(m){return n(m.worker_runs)>0;});
+      pooled.slice(0,6).forEach(function(s){
+        var peers=n(s.pool_size)-1;
+        var label=(s.gpu_split&&s.gpu_split!=="null"?s.gpu_split+" · ":"")+n(s.decode_tps).toFixed(1)+" tok/s";
+        for(var i=0;i<peers;i++){
+          var target;
+          if(workers[i]&&workers[i].install_id!==s.install_id){ target=workers[i].install_id; }
+          else { var pid="peer-"+(++ph);
+            nodes.push({id:pid,name:"pooled peer",symbolSize:26,itemStyle:{color:"rgba(168,150,255,.5)"},label:{color:C.tert,fontSize:10}});
+            target=pid; }
+          edges.push({source:s.install_id,target:target,
+            label:{show:true,formatter:label,color:C.tert,fontSize:9.5,fontFamily:"Geist Mono"},
+            lineStyle:{color:C.aqua,width:1.6,curveness:.15,opacity:.7}});
+        }});
+      chart("g-topo").setOption({backgroundColor:"transparent",
+        tooltip:{backgroundColor:"#1E232E",textStyle:{color:"#F4F6FB",fontSize:12}},
+        series:[{type:"graph",layout:"force",roam:true,draggable:true,
+          force:{repulsion:900,edgeLength:180,gravity:.08},
+          data:nodes,links:edges,label:{show:true,position:"bottom"},
+          emphasis:{focus:"adjacency"},lineStyle:{color:C.aqua}}]});
+    });
+  }},
+  sessions: { title:"Sessions", render: function(root){
+    root.innerHTML='<div class="grid"><div class="card w12"><div class="tbl-scroll"><table id="s-table"><tr><td>'+skel(30)+'</td></tr></table></div></div></div>';
+    q("my_sessions").then(function(sessions){
+      var t=el("s-table");
+      if(!sessions.length){ t.innerHTML='<tr><td class="empty">No sessions in this period — run <span class="mono">vectorgrid run tinyllama -p "hello"</span></td></tr>'; return; }
+      t.innerHTML="<thead><tr>"+["when","model","mode","how","tokens in/out","decode tok/s","ttft","ctx","failovers","finish"].map(function(h,i){
+        return "<th"+(i>=4&&i<=8?' class="num"':'')+">"+h+"</th>";}).join("")+"</tr></thead><tbody>"+
+      sessions.map(function(s){
+        var pooled=s.pool_size&&s.pool_size!=="null"&&n(s.pool_size)>1;
+        var how=pooled?'<span class="chip aqua">pooled ×'+s.pool_size+(s.gpu_split&&s.gpu_split!=="null"?' · '+s.gpu_split:'')+'</span>':'<span class="chip">local</span>';
+        return "<tr><td class='mono'>"+(s.ts_utc||"").replace("T"," ").slice(5,16)+
+          "</td><td class='mono'>"+(s.model_alias||"?")+"</td><td class='mono'>"+(s.mode||"?")+
+          "</td><td>"+how+"</td><td class='mono num'>"+fmt(s.prompt_tokens)+" / "+fmt(s.completion_tokens)+
+          "</td><td class='mono num'>"+n(s.decode_tps).toFixed(1)+
+          "</td><td class='mono num'>"+fmt(Math.round(n(s.ttft_ms)))+"ms"+
+          "</td><td class='mono num'>"+fmt(s.ctx_granted)+
+          "</td><td class='mono num'"+(n(s.failovers)>0?" style='color:var(--gold-400)'":"")+">"+fmt(s.failovers)+
+          "</td><td class='mono'>"+(s.finish_reason||"?")+"</td></tr>";}).join("")+"</tbody>";
+    });
+  }},
+  usage: { title:"Usage", render: function(root){
+    root.innerHTML='<div class="grid">'+
+      '<div class="card w8"><h3>Tokens & sessions / day</h3><div class="chart" id="u-daily"></div></div>'+
+      '<div class="card w4"><h3>Your models</h3><div class="chart" id="u-models"></div></div>'+
+      '<div class="card w12"><h3>Pooled share / day</h3><div class="chart" id="u-pooled"></div></div></div>';
+    q("my_usage_daily").then(function(rows){
+      chart("u-daily").setOption(base({
+        xAxis:Object.assign({type:"category",data:rows.map(function(r){return r.dt;})},AXIS),
+        yAxis:[Object.assign({type:"value"},AXIS),Object.assign({type:"value",minInterval:1},AXIS)],
+        series:[
+          {name:"tokens",type:"line",smooth:true,symbol:"none",areaStyle:{opacity:.15},data:rows.map(function(r){return n(r.tokens);})},
+          {name:"sessions",type:"bar",yAxisIndex:1,barMaxWidth:16,itemStyle:{color:C.aqua},data:rows.map(function(r){return n(r.sessions);})}]}));
+      chart("u-pooled").setOption(base({
+        xAxis:Object.assign({type:"category",data:rows.map(function(r){return r.dt;})},AXIS),
+        yAxis:Object.assign({type:"value",minInterval:1},AXIS),
+        series:[
+          {name:"sessions",type:"bar",barMaxWidth:20,data:rows.map(function(r){return n(r.sessions);})},
+          {name:"pooled",type:"bar",barMaxWidth:20,itemStyle:{color:C.aqua},data:rows.map(function(r){return n(r.pooled);})}]}));
+    });
+    q("my_models").then(function(rows){
+      rows=rows.slice().reverse();
+      chart("u-models").setOption(base({legend:{show:false},grid:{left:140,right:34,top:8,bottom:26},
+        xAxis:Object.assign({type:"value"},AXIS),
+        yAxis:Object.assign({type:"category",data:rows.map(function(r){return r.model_alias;})},AXIS,{axisLabel:{color:C.text,fontFamily:"Geist Mono",fontSize:11}}),
+        series:[{type:"bar",barMaxWidth:14,itemStyle:{borderRadius:[0,4,4,0]},
+          label:{show:true,position:"right",color:C.tert,fontFamily:"Geist Mono",fontSize:10,formatter:function(p){return fmt(p.value);}},
+          data:rows.map(function(r){return n(r.sessions);})}]}));
+    });
+  }},
+  account: { title:"Account", render: function(root){
+    root.innerHTML='<div class="grid">'+
+      '<div class="card w6"><h3>Account</h3>'+
+        '<div style="font-size:14px;margin-bottom:6px">'+(state.email||"")+'</div>'+
+        '<div id="acct-meta" style="font-size:12.5px;color:var(--text-tertiary)">'+skel(20)+'</div>'+
+        '<div style="margin-top:16px"><button class="refresh" id="acct-signout">sign out of this browser</button></div>'+
+        '<div style="font-size:11.5px;color:var(--text-tertiary);margin-top:14px">Sign a machine out: <span class="mono">vectorgrid logout</span> on that machine. Account deletion: email <a href="mailto:support@vectorgrid.net">support@vectorgrid.net</a>.</div></div>'+
+      '<div class="card w6"><h3>Telemetry</h3>'+
+        '<p style="font-size:13px;color:var(--text-secondary)">Signed-in machines report anonymous, content-free usage metadata — never prompts, outputs, paths or addresses. It powers this console.</p>'+
+        '<div style="margin-top:10px" class="cmdline"><span class="dollar">$</span><code id="ac0">vectorgrid telemetry status</code><button data-copy="ac0">copy</button></div>'+
+        '<div style="margin-top:8px" class="cmdline"><span class="dollar">$</span><code id="ac1">vectorgrid telemetry off</code><button data-copy="ac1">copy</button></div>'+
+        '<div style="font-size:11.5px;color:var(--text-tertiary);margin-top:10px">Schema: <a href="/#telemetry" target="_blank" rel="noopener">vectorgrid.net/#telemetry</a></div></div></div>';
+    el("acct-signout").addEventListener("click",signOut);
+    q("my_summary").then(function(rows){
+      var k=rows[0]||{};
+      el("acct-meta").innerHTML='member since <span class="mono">'+(k.first_seen||"–").slice(0,10)+
+        '</span> · <span class="mono">'+fmt(k.machines)+'</span> machine(s) · <span class="mono">'+fmt(k.tokens)+'</span> tokens · latest release <span class="mono">v'+LATEST_VERSION+'</span>';
+    });
+  }}
+};
+
+/* ───────── router + shell ───────── */
+function route(){
+  var v=(location.hash.replace("#/","")||"overview");
+  if(!VIEWS[v]) v="overview";
+  state.view=v;
+  document.querySelectorAll(".rail a.item[data-view]").forEach(function(a){
+    var on=a.dataset.view===v;
+    a.classList.toggle("active",on);
+    if(on)a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current");
+  });
+  el("view-title").textContent=VIEWS[v].title;
+  Object.keys(state.charts).forEach(function(k){ state.charts[k].dispose(); }); state.charts={};
+  var root=el("view-root");
+  var fresh=root.cloneNode(false); root.parentNode.replaceChild(fresh,root);
+  VIEWS[v].render(fresh);
 }
+addEventListener("hashchange",route);
 document.querySelectorAll("#period button").forEach(function(b){
-  b.addEventListener("click", function(){
-    document.querySelectorAll("#period button").forEach(function(x){ x.classList.remove("on"); });
-    b.classList.add("on"); state.days = Number(b.dataset.d); loadConsole();
+  b.addEventListener("click",function(){
+    document.querySelectorAll("#period button").forEach(function(x){x.classList.remove("on");});
+    b.classList.add("on"); state.days=Number(b.dataset.d); clearCache(); route();
   });
 });
-document.getElementById("refresh").addEventListener("click", loadConsole);
-if (state.token) showConsole();
+el("refresh").addEventListener("click",function(){ clearCache(); route(); });
+
+function showApp(){
+  el("gate").classList.add("hidden"); el("onb").classList.add("hidden");
+  el("app").classList.remove("hidden");
+  el("who").textContent=state.email||"";
+  route();
+}
+function enter(forceOnboard){
+  // New accounts (or accounts with no machines yet) get the setup guide.
+  if(forceOnboard){ el("gate").classList.add("hidden"); onbStep=0; el("onb").classList.remove("hidden"); renderOnb(); return; }
+  fetch(API+"my_machines?d=90",{headers:{Authorization:state.token}})
+    .then(function(r){return r.json();}).then(function(j){
+      if((j.rows||[]).length) showApp();
+      else { el("gate").classList.add("hidden"); onbStep=0; el("onb").classList.remove("hidden"); renderOnb(); }
+    }).catch(function(){ showApp(); });
+}
+if(state.token) enter(false);
 })();
 </script>
 </body>

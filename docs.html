@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VectorGrid — docs</title>
+<meta name="description" content="VectorGrid documentation: install, the agent, the OpenAI-compatible server, pooling machines, models, accounts and troubleshooting." />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='24' y2='24'%3E%3Cstop stop-color='%238A78FF'/%3E%3Cstop offset='1' stop-color='%2322E0BE'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='5' cy='5' r='2.1' fill='url(%23g)'/%3E%3Ccircle cx='12' cy='5' r='2.1' fill='%236E56F7'/%3E%3Ccircle cx='19' cy='5' r='2.1' fill='url(%23g)'/%3E%3Ccircle cx='5' cy='12' r='2.1' fill='%236E56F7'/%3E%3Ccircle cx='12' cy='12' r='2.6' fill='url(%23g)'/%3E%3Ccircle cx='19' cy='12' r='2.1' fill='%236E56F7'/%3E%3Ccircle cx='5' cy='19' r='2.1' fill='url(%23g)'/%3E%3Ccircle cx='12' cy='19' r='2.1' fill='%236E56F7'/%3E%3Ccircle cx='19' cy='19' r='2.1' fill='url(%23g)'/%3E%3C/svg%3E" />
+<style>
+@font-face{font-family:'Geist';src:url('/fonts/Geist-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'Geist';src:url('/fonts/Geist-Medium.woff2') format('woff2');font-weight:500;font-display:swap}
+@font-face{font-family:'Geist';src:url('/fonts/Geist-SemiBold.woff2') format('woff2');font-weight:600;font-display:swap}
+@font-face{font-family:'Geist Mono';src:url('/fonts/GeistMono-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+:root{
+  --bg-void:#07080B;--bg-base:#0A0C11;--bg-surface:#101319;--bg-raised:#161A23;
+  --border-hairline:rgba(255,255,255,.06);--border-subtle:rgba(255,255,255,.10);
+  --text-primary:#F4F6FB;--text-secondary:#AEB4C2;--text-tertiary:#767D8E;
+  --iris-300:#A896FF;--iris-400:#8A78FF;--iris-500:#6E56F7;--aqua-400:#4CEBCD;--aqua-500:#22E0BE;--gold-400:#FFC24B;
+  --r-sm:8px;--r-md:10px;--r-lg:14px;--r-full:9999px;
+  --font-sans:'Geist',Inter,ui-sans-serif,system-ui,sans-serif;
+  --font-mono:'Geist Mono',ui-monospace,'SF Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg-base);color:var(--text-primary);font-family:var(--font-sans);font-size:15.5px;line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:var(--iris-400);text-decoration:none}
+a:hover{color:var(--iris-300)}
+:focus-visible{outline:2px solid var(--iris-500);outline-offset:2px}
+.nav{position:sticky;top:0;z-index:100;height:56px;display:flex;align-items:center;gap:22px;padding:0 24px;background:rgba(10,12,17,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-hairline)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px;color:var(--text-primary)}
+.nav a.lnk{color:var(--text-secondary);font-size:14px;font-weight:500}
+.nav a.lnk:hover{color:var(--text-primary)}
+.nav .cta{margin-left:auto;background:var(--iris-500);color:#fff;height:36px;display:inline-flex;align-items:center;padding:0 16px;border-radius:var(--r-md);font-size:13.5px;font-weight:500}
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:40px;max-width:1100px;margin:0 auto;padding:36px 24px 96px}
+@media(max-width:860px){.layout{grid-template-columns:1fr}}
+.toc{position:sticky;top:80px;align-self:start;font-size:13px}
+@media(max-width:860px){.toc{position:static;border-bottom:1px solid var(--border-hairline);padding-bottom:16px}}
+.toc .h{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary);margin:14px 0 6px}
+.toc a{display:block;color:var(--text-secondary);padding:3px 0}
+.toc a:hover{color:var(--text-primary)}
+main{max-width:720px}
+h1{font-size:32px;line-height:1.15;letter-spacing:-.015em;margin-bottom:10px}
+.lead{font-size:16.5px;color:var(--text-secondary);margin-bottom:32px}
+h2{font-size:21px;letter-spacing:-.01em;margin:44px 0 12px;padding-top:8px}
+h3{font-size:16px;margin:26px 0 8px}
+p{color:var(--text-secondary);margin-bottom:12px;max-width:68ch}
+p strong{color:var(--text-primary);font-weight:500}
+ul{color:var(--text-secondary);margin:0 0 12px 20px}
+li{margin-bottom:5px}
+code{font-family:var(--font-mono);font-size:.9em;color:var(--iris-300);background:rgba(110,86,247,.08);padding:1px 6px;border-radius:6px}
+.block{position:relative;background:var(--bg-void);border:1px solid var(--border-hairline);border-radius:var(--r-md);padding:13px 15px;margin:10px 0 16px;overflow-x:auto}
+.block code{background:none;padding:0;color:var(--text-primary);font-size:13px;white-space:pre}
+.block .dollar{color:var(--aqua-500);user-select:none}
+.block button{position:absolute;top:8px;right:8px;background:var(--bg-raised);border:1px solid var(--border-subtle);color:var(--text-tertiary);border-radius:var(--r-sm);font-size:11px;padding:3px 9px;cursor:pointer;font-family:var(--font-sans)}
+.block button:hover{color:var(--text-primary)}
+.note{border-left:3px solid var(--iris-500);background:rgba(110,86,247,.06);border-radius:0 var(--r-md) var(--r-md) 0;padding:10px 14px;font-size:13.5px;color:var(--text-secondary);margin:12px 0 16px}
+.note.warn{border-left-color:var(--gold-400);background:rgba(255,194,75,.06)}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0 18px}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-tertiary);padding:7px 10px;border-bottom:1px solid var(--border-subtle)}
+td{padding:7px 10px;border-bottom:1px solid var(--border-hairline);color:var(--text-secondary)}
+td code{white-space:nowrap}
+.tbl{overflow-x:auto}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="/">
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="bg1" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#8A78FF"/><stop offset="1" stop-color="#22E0BE"/></linearGradient></defs><circle cx="5" cy="5" r="2.1" fill="url(#bg1)"/><circle cx="12" cy="5" r="2.1" fill="#6E56F7"/><circle cx="19" cy="5" r="2.1" fill="url(#bg1)"/><circle cx="5" cy="12" r="2.1" fill="#6E56F7"/><circle cx="12" cy="12" r="2.6" fill="url(#bg1)"/><circle cx="19" cy="12" r="2.1" fill="#6E56F7"/><circle cx="5" cy="19" r="2.1" fill="url(#bg1)"/><circle cx="12" cy="19" r="2.1" fill="#6E56F7"/><circle cx="19" cy="19" r="2.1" fill="#6E56F7"/></svg>
+    VectorGrid <span style="color:var(--text-tertiary);font-weight:400">docs</span>
+  </a>
+  <a class="lnk" href="/">Home</a>
+  <a class="lnk" href="/console.html">Console</a>
+  <a class="lnk" href="https://github.com/VectorGrid/vectorgrid" rel="noopener">GitHub</a>
+  <a class="cta" href="/console.html">Sign in</a>
+</nav>
+
+<div class="layout">
+<aside class="toc" aria-label="Contents">
+  <div class="h">Start</div>
+  <a href="#install">Install</a>
+  <a href="#account">Your account</a>
+  <a href="#first-run">First run</a>
+  <div class="h">Use</div>
+  <a href="#agent">The agent</a>
+  <a href="#serve">Serve an API</a>
+  <a href="#pool">Pool your machines</a>
+  <a href="#models">Models &amp; context</a>
+  <div class="h">Operate</div>
+  <a href="#telemetry">Telemetry &amp; privacy</a>
+  <a href="#troubleshoot">Troubleshooting</a>
+  <a href="#reference">CLI reference</a>
+</aside>
+
+<main>
+<h1>VectorGrid documentation</h1>
+<p class="lead">One binary, one GGUF file: a local agent, an OpenAI-compatible server, and a network layer that pools every machine you own into one inference grid.</p>
+
+<h2 id="install">Install</h2>
+<p>macOS and Linux:</p>
+<div class="block"><button data-copy>copy</button><code><span class="dollar">$</span> curl -sSL https://raw.githubusercontent.com/VectorGrid/vectorgrid/main/install.sh | sh</code></div>
+<p>Windows (PowerShell):</p>
+<div class="block"><button data-copy>copy</button><code><span class="dollar">&gt;</span> irm https://raw.githubusercontent.com/VectorGrid/vectorgrid/main/install.ps1 | iex</code></div>
+<p>The installer detects your platform, verifies SHA-256 checksums, and installs to <code>~/.vectorgrid/bin</code>. On Linux it picks the CUDA build automatically when an NVIDIA driver is present — the CUDA runtime ships inside the tarball, so the driver is all you need. Update any time with <code>vectorgrid update</code>.</p>
+
+<h2 id="account">Your account</h2>
+<div class="block"><button data-copy>copy</button><code><span class="dollar">$</span> vectorgrid login</code></div>
+<p>Product commands require a signed-in account — once per machine. If you don't have an account, the login prompt creates one right there (type <code>new</code>), including email verification. After that, scripts and services on the machine inherit the stored sign-in automatically, and a 72-hour offline grace window keeps a signed-in machine working without a network.</p>
+<p>Diagnostics (<code>doctor</code>, <code>analyse</code>) and account commands always work without sign-in. Everything your account runs appears in <a href="/console.html">your console</a>.</p>
+
+<h2 id="first-run">First run</h2>
+<div class="block"><button data-copy>copy</button><code><span class="dollar">$</span> vectorgrid</code></div>
+<p>The bare command opens the agent. With no model installed, it detects your hardware, recommends a model that fits, and offers to download and start it. Prefer a plain model chat? <code>vectorgrid pull tinyllama &amp;&amp; vectorgrid run tinyllama</code> gets you a REPL with a ~640&nbsp;MB starter model.</p>
+
+<h2 id="agent">The agent</h2>
+<p>A Claude-Code-style assistant, fully local: it can run commands, read and write files, search your code, browse the web, and call MCP servers — powered by the model of your choice.</p>
+<div class="block"><button data-copy>copy</button><code><span class="dollar">$</span> vectorgrid pull qwen2.5-7b-instruct   # agent-grade model
+<span class="dollar">$</span> vectorgrid                            # interactive agent
+<span class="dollar">$</span> vectorgrid agent -p "summarize what changed in the last commit"</code></div>
+
+<h2 id="serve">Serve an API</h2>
+<div class="block"><button data-copy>copy</button><code><span class="dollar">$</span> vectorgrid serve --model qwen2.5-7b-instruct</code></div>
+<p>An OpenAI-compatible API on port <strong>28100</strong> (deliberately uncommon — no collisions with 8080/8000/3000/11434; override with <code>--port</code>). Point any OpenAI client at <code>http://localhost:28100/v1</code>: chat completions with streaming, tools, embeddings, continuous batching, speculative decoding.</p>
+<div class="block"><button data-copy>copy</button><code><span class="dollar">$</span> vectorgrid daemon start --model qwen2.5-7b-instruct   # run in the background
+<span class="dollar">$</span> vectorgrid ps                                          # what's up
+<span class="dollar">$</span> vectorgrid daemon stop</code></div>
+<p>Operational niceties built in: <code>/metrics</code> (Prometheus), <code>/health</code>, API keys via <code>--api-keys</code>, request-duration limits that auto-scale to hardware, and an OOM admission breaker.</p>
+
+<h2 id="pool">Pool your machines</h2>
+<p>A gaming PC, a MacBook, an old workstation — each too small for the model you want. Pooled over your LAN, they run it together: layers split across machines, activations streaming over a UDP transport built for inference.</p>
+<div class="block"><button data-copy>copy</button><code><span class="dollar">$</span> # on the machines with GPUs:
+<span class="dollar">$</span> vectorgrid worker --listen vgt://0.0.0.0:19310 --announce
+
+<span class="dollar">$</span> # on your laptop — workers are auto-discovered:
+<span class="dollar">$</span> vectorgrid run r1-distill-qwen-14b --pool</code></div>
+<ul>
+<li><strong>Byte-identical, split or not.</strong> The same seed produces the same bytes on one machine or five — greedy decoding is bit-exact.</li>
+<li><strong>Survives failures.</strong> A worker dying mid-generation reconnects — or fails over to a different worker — and the output is still identical.</li>
+<li><strong>Loss-engineered transport.</strong> Selective-ACK ARQ plus Reed-Solomon parity: at 5% packet loss, decode holds clean-link speed.</li>
+<li><strong>Encrypted by default.</strong> AEAD on every session.</li>
+</ul>
+<p>Name machines explicitly with <code>--nodes vgt://host:19310</code>, control the split with <code>--gpu-split 24,24</code>. If discovery misbehaves, <code>vectorgrid doctor</code> diagnoses your LAN (firewalls, broadcast, WiFi power-save) with exact fix commands.</p>
+
+<h2 id="models">Models &amp; context</h2>
+<div class="block"><button data-copy>copy</button><code><span class="dollar">$</span> vectorgrid pull &lt;name&gt;      # 40+ curated models, parallel + resumable + verified
+<span class="dollar">$</span> vectorgrid list             # what's installed
+<span class="dollar">$</span> vectorgrid analyse          # which models fit this machine (and your pool)</code></div>
+<p>The curated catalog spans Qwen 3 / 2.5, Llama 3.1–3.3, DeepSeek-R1 distills, Gemma 2/3, Phi, Mistral, GLM-4, Granite, coding models and embeddings. Any GGUF you already have works via <code>vectorgrid import</code>; make your own quantizations with <code>vectorgrid quantize</code>.</p>
+<h3>Long context</h3>
+<ul>
+<li><code>--ctx-size N</code> requests context; a memory preflight grants what actually fits and says so honestly.</li>
+<li><code>--kv-dtype f16</code> halves KV memory — roughly double the context. Labeled non-exact: outputs can differ from f32 at the last bit. Keep f32 for attestation.</li>
+<li><code>--prompt-file path</code> for prompts beyond the OS argument limit (long-context work needs it).</li>
+<li>Pooling is the long-context play: KV memory and bandwidth divide across machines — two pooled GPUs read a prompt neither could hold alone.</li>
+</ul>
+
+<h2 id="telemetry">Telemetry &amp; privacy</h2>
+<p>Signed-in machines report anonymous usage metadata — command used, model <em>alias</em>, tokens/sec, crash location with the panic message <em>hashed</em>. The schema is content-free by construction: prompts, outputs, file paths, and addresses have no fields to live in. Batches upload every 15 minutes; offline they wait on disk, capped at 20&nbsp;MB.</p>
+<div class="block"><button data-copy>copy</button><code><span class="dollar">$</span> vectorgrid telemetry status   # exactly what's queued
+<span class="dollar">$</span> vectorgrid telemetry off      # opt out permanently (queue purged)</code></div>
+
+<h2 id="troubleshoot">Troubleshooting</h2>
+<div class="block"><button data-copy>copy</button><code><span class="dollar">$</span> vectorgrid doctor</code></div>
+<p>Checks your install, compute backend and GPU initialization, model directory, server health, LAN discovery (firewall rules with exact allow commands, WiFi power-save, cloud-VM broadcast caveats), and can truth-test a specific worker with <code>doctor --worker vgt://host:port</code>. <code>--fix</code> applies the safe fixes automatically.</p>
+<div class="note warn">GPU worker looks idle or slow? Check that nothing else is pinning VRAM, then <code>vectorgrid analyse</code> to confirm the model actually fits — the preflight refuses dishonest configurations rather than swapping to disk.</div>
+
+<h2 id="reference">CLI reference</h2>
+<div class="tbl"><table>
+<tr><th>Command</th><th>What it does</th></tr>
+<tr><td><code>vectorgrid</code></td><td>Open the agent (same as <code>vectorgrid agent</code>)</td></tr>
+<tr><td><code>vectorgrid run &lt;model&gt; [-p "…"] [--prompt-file f]</code></td><td>One-shot or interactive generation</td></tr>
+<tr><td><code>vectorgrid serve --model &lt;m&gt; [--port N] [--api-keys …]</code></td><td>OpenAI-compatible API server</td></tr>
+<tr><td><code>vectorgrid worker --listen vgt://0.0.0.0:19310 [--announce]</code></td><td>Offer this machine's compute to your grid</td></tr>
+<tr><td><code>vectorgrid run &lt;m&gt; --pool | --nodes vgt://host:port</code></td><td>Split the model across pooled machines</td></tr>
+<tr><td><code>vectorgrid pull / list / show / info / rm / gc</code></td><td>Model management (parallel pulls, LRU cache cleanup)</td></tr>
+<tr><td><code>vectorgrid daemon start|stop|status|logs · ps · stop</code></td><td>Background server lifecycle</td></tr>
+<tr><td><code>vectorgrid login / signup / verify-email / logout / whoami</code></td><td>Account</td></tr>
+<tr><td><code>vectorgrid telemetry status|on|off</code></td><td>Telemetry control</td></tr>
+<tr><td><code>vectorgrid doctor [--fix] · analyse</code></td><td>Diagnostics · what fits your hardware</td></tr>
+<tr><td><code>vectorgrid bench · eval perplexity</code></td><td>Throughput benchmark · accuracy evaluation</td></tr>
+<tr><td><code>vectorgrid quantize · import · embed</code></td><td>Quantize GGUFs · import external models · embeddings</td></tr>
+<tr><td><code>vectorgrid update · verify &lt;attestation&gt;</code></td><td>Self-update · verify a deterministic-run attestation</td></tr>
+</table></div>
+<p>Global flags: <code>--backend auto|cpu|cuda|metal|blas</code> · <code>--kv-dtype f32|f16</code> · <code>--models-dir</code> · <code>--verbose</code> · <code>--log-level</code>. Useful env: <code>VG_TELEMETRY=0</code>, <code>VECTORGRID_HOME</code>, <code>VG_PREFILL_CHUNK</code>, <code>VG_NET_FEC</code>.</p>
+
+<p style="margin-top:40px;font-size:13px;color:var(--text-tertiary)">Questions or bugs → <a href="https://github.com/VectorGrid/vectorgrid/issues" rel="noopener">GitHub issues</a> · your data → <a href="/console.html">console</a></p>
+</main>
+</div>
+
+<script>
+document.addEventListener("click",function(ev){
+  var b=ev.target.closest("[data-copy]"); if(!b) return;
+  var code=b.parentElement.querySelector("code");
+  var text=code.textContent.replace(/^\$\s?/gm,"").replace(/^>\s?/gm,"");
+  navigator.clipboard.writeText(text).then(function(){
+    b.textContent="copied"; setTimeout(function(){b.textContent="copy";},1600);
+  });
+});
+</script>
+</body>
+</html>
