@@ -427,9 +427,9 @@ footer{border-top:1px solid var(--border-hairline);padding:48px 0;background:var
         <div class="how">--kv-dtype f16 · byte-identical goldens held</div>
       </div>
       <div class="bench-tile reveal">
-        <div class="val iris">&gt;12K<span class="unit"> ctx</span></div>
-        <div class="what">Where a pooled split overtakes a single machine — KV bandwidth divides across nodes.</div>
-        <div class="how">24 vs 19 tok/s at 16K ctx · 1.5B · 2 machines</div>
+        <div class="val aqua"><span data-count="69919">0</span><span class="unit"> tokens</span></div>
+        <div class="what">One prompt across two pooled GPUs — 1.35&times; beyond what either could hold alone. The needle, 29K tokens deep, retrieved exactly.</div>
+        <div class="how">14B · 2&times; A10G over vgt:// · single-GPU ceiling 51,959 · byte-exact f32</div>
       </div>
     </div>
     <p class="bench-note">Distributed results measured over real consumer WiFi between a Mac mini (M4 Pro, Metal) and an RTX laptop (CUDA); long-context results on AWS g5.xlarge. Methodology and raw logs live in the engine's execution log.</p>
