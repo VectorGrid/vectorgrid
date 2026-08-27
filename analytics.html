@@ -134,25 +134,34 @@ td .dot{display:inline-block;width:7px;height:7px;border-radius:var(--r-full);ma
     <div id="tab-business">
       <div class="kpis" id="biz-kpis"></div>
       <div class="grid">
-        <div class="card w8"><h3>Tokens served / day</h3><div class="chart" id="c-tokens"></div></div>
+        <div class="card w8"><h3>Daily active — installs &amp; signed-in</h3><div class="chart" id="c-active"></div></div>
+        <div class="card w4"><h3>Retention</h3><div class="chart" id="c-retention"></div></div>
+        <div class="card w8"><h3>New installs / day &amp; cumulative</h3><div class="chart" id="c-installs"></div></div>
+        <div class="card w4"><h3>Activation funnel</h3><div class="chart" id="c-funnel"></div></div>
+        <div class="card w8"><h3>Pooling adoption — the multi-machine thesis</h3><div class="chart" id="c-pooling"></div></div>
         <div class="card w4"><h3>Platforms (installs)</h3><div class="chart" id="c-platforms"></div></div>
+        <div class="card w8"><h3>Tokens served / day</h3><div class="chart" id="c-tokens"></div></div>
+        <div class="card w4"><h3>Version adoption (installs)</h3><div class="chart" id="c-versions"></div></div>
         <div class="card"><h3>Inference sessions / day</h3><div class="chart" id="c-sessions"></div></div>
         <div class="card"><h3>Commands / day</h3><div class="chart" id="c-commands"></div></div>
-        <div class="card w8"><h3>Model popularity</h3><div class="chart tall" id="c-models"></div></div>
-        <div class="card w4"><h3>Version adoption (installs)</h3><div class="chart tall" id="c-versions"></div></div>
+        <div class="card w12"><h3>Model popularity</h3><div class="chart tall" id="c-models"></div></div>
       </div>
     </div>
 
     <!-- TECH -->
     <div id="tab-tech" class="hidden">
+      <div class="kpis" id="tech-kpis"></div>
       <div class="grid">
         <div class="card"><h3>Crashes / day by version</h3><div class="chart" id="c-crashes"></div></div>
-        <div class="card"><h3>Error classes</h3><div class="chart" id="c-errors"></div></div>
+        <div class="card"><h3>Errors / day by class</h3><div class="chart" id="c-errors-daily"></div></div>
+        <div class="card w12"><h3>Crash details</h3><div class="tbl-scroll"><table id="t-crashes"></table></div></div>
+        <div class="card"><h3>Error classes (totals)</h3><div class="chart" id="c-errors"></div></div>
         <div class="card"><h3>Transport events / day</h3><div class="chart" id="c-net"></div></div>
         <div class="card"><h3>Distributed health — failovers &amp; speculation α</h3><div class="chart" id="c-dist"></div></div>
         <div class="card w12"><h3>Serve load / day</h3><div class="chart" id="c-serve"></div></div>
-        <div class="card w6"><h3>Performance by backend</h3><div class="tbl-scroll"><table id="t-perf"></table></div></div>
-        <div class="card w6"><h3>Command durations &amp; failures</h3><div class="tbl-scroll"><table id="t-cmd"></table></div></div>
+        <div class="card w4"><h3>Performance by backend</h3><div class="tbl-scroll"><table id="t-perf"></table></div></div>
+        <div class="card w4"><h3>Performance by version</h3><div class="tbl-scroll"><table id="t-perf-ver"></table></div></div>
+        <div class="card w4"><h3>Command durations &amp; failures</h3><div class="tbl-scroll"><table id="t-cmd"></table></div></div>
       </div>
     </div>
 
@@ -271,15 +280,94 @@ function pivot(rows, keyField, valField){
 function loadBusiness(){
   q("kpis").then(function(rows){
     var k = rows[0] || {};
+    var stick = n(k.mau) > 0 ? Math.round(100 * n(k.dau) / n(k.mau)) + "%" : "–";
+    var crashFree = n(k.sessions_total) > 0
+      ? (100 * (1 - Math.min(1, n(k.crashes_total) / n(k.sessions_total)))).toFixed(1) + "%" : "–";
+    var pooled = n(k.sessions_total) > 0
+      ? Math.round(100 * n(k.distributed_sessions) / n(k.sessions_total)) + "%" : "–";
     var el = document.getElementById("biz-kpis");
-    el.innerHTML = [
-      ["dau","DAU (installs)","aqua"], ["wau","WAU","iris"], ["signed_dau","Signed-in DAU","iris"],
-      ["installs_total","Installs · "+state.days+"d",""], ["signed_total","Signed-in users",""],
-      ["sessions_total","Inference sessions",""], ["tokens_total","Tokens served","aqua"],
-      ["crashes_total","Crashes", n(k.crashes_total) > 0 ? "danger" : ""]
-    ].map(function(d){
-      return '<div class="kpi"><div class="v '+d[2]+'">'+fmt(k[d[0]])+'</div><div class="l">'+d[1]+'</div></div>';
+    var tiles = [
+      [fmt(k.dau),"DAU (installs)","aqua"], [fmt(k.wau),"WAU","iris"], [fmt(k.mau),"MAU","iris"],
+      [stick,"Stickiness DAU/MAU","aqua"],
+      [fmt(k.installs_total),"Installs · "+state.days+"d",""], [fmt(k.signed_total),"Signed-in users",""],
+      [fmt(k.sessions_total),"Inference sessions",""], [fmt(k.tokens_total),"Tokens served","aqua"],
+      [pooled,"Pooled sessions","iris"],
+      [crashFree,"Crash-free sessions", n(k.crashes_total) > 0 ? "danger" : "aqua"]
+    ];
+    el.innerHTML = tiles.map(function(d){
+      return '<div class="kpi"><div class="v '+d[2]+'">'+d[0]+'</div><div class="l">'+d[1]+'</div></div>';
     }).join("");
+  });
+  q("active_daily").then(function(rows){
+    chart("c-active").setOption(base({
+      xAxis: Object.assign({type:"category",data:dates(rows)},AXIS),
+      yAxis: Object.assign({type:"value",minInterval:1},AXIS),
+      series: [
+        { name:"active installs", type:"line", smooth:true, symbol:"circle", areaStyle:{opacity:.15},
+          data: rows.map(function(r){return n(r.active_installs);}) },
+        { name:"signed-in", type:"line", smooth:true, symbol:"circle", itemStyle:{color:C.aqua},
+          data: rows.map(function(r){return n(r.active_signed);}) }
+      ]}));
+  });
+  q("installs_daily").then(function(rows){
+    chart("c-installs").setOption(base({
+      xAxis: Object.assign({type:"category",data:dates(rows)},AXIS),
+      yAxis: [Object.assign({type:"value",minInterval:1},AXIS), Object.assign({type:"value",minInterval:1},AXIS)],
+      series: [
+        { name:"new installs", type:"bar", barMaxWidth:22,
+          data: rows.map(function(r){return n(r.new_installs);}) },
+        { name:"cumulative", type:"line", yAxisIndex:1, smooth:true, symbol:"none",
+          itemStyle:{color:C.aqua}, lineStyle:{width:2},
+          data: rows.map(function(r){return n(r.cumulative);}) }
+      ]}));
+  });
+  q("retention").then(function(rows){
+    var k = rows[0] || {};
+    function pct(ret, eli){ var e = n(eli); return e > 0 ? Math.round(100 * n(ret) / e) : null; }
+    var data = [
+      { name:"D1", v: pct(k.retained_d1, k.eligible_d1) },
+      { name:"D7", v: pct(k.retained_d7, k.eligible_d7) },
+      { name:"D30", v: pct(k.retained_d30, k.eligible_d30) }
+    ];
+    chart("c-retention").setOption(base({
+      legend:{show:false}, grid:{left:44,right:16,top:16,bottom:26},
+      tooltip:{trigger:"item",backgroundColor:"#1E232E",textStyle:{color:"#F4F6FB",fontSize:12},
+        formatter:function(p){ return p.name + ": " + (p.value===null?"no cohort yet":p.value+"%"); }},
+      xAxis:Object.assign({type:"category",data:data.map(function(d){return d.name;})},AXIS),
+      yAxis:Object.assign({type:"value",max:100,axisLabel:{color:C.tert,formatter:"{value}%",fontFamily:"Geist Mono",fontSize:10}},AXIS),
+      series:[{ type:"bar", barMaxWidth:44, itemStyle:{borderRadius:[4,4,0,0],color:C.iris},
+        label:{show:true,position:"top",color:C.text,fontFamily:"Geist Mono",fontSize:11,
+          formatter:function(p){ return p.value===null?"–":p.value+"%"; }},
+        data:data.map(function(d){return d.v;}) }]
+    }));
+  });
+  q("funnel").then(function(rows){
+    var k = rows[0] || {};
+    var steps = [
+      ["Installs", n(k.installs)], ["Signed in", n(k.signed_in)],
+      ["Ran inference", n(k.ran_inference)], ["Returned (2+ days)", n(k.returned)]
+    ].reverse();
+    chart("c-funnel").setOption(base({
+      legend:{show:false}, grid:{left:120,right:40,top:8,bottom:26},
+      xAxis:Object.assign({type:"value",minInterval:1},AXIS),
+      yAxis:Object.assign({type:"category",data:steps.map(function(s){return s[0];})},AXIS,
+        {axisLabel:{color:C.text,fontSize:11}}),
+      series:[{ type:"bar", barMaxWidth:20, itemStyle:{borderRadius:[0,4,4,0]},
+        label:{show:true,position:"right",color:C.text,fontFamily:"Geist Mono",fontSize:11},
+        data:steps.map(function(s,i){ return { value:s[1], itemStyle:{color:PALETTE[steps.length-1-i]} }; }) }]
+    }));
+  });
+  q("pooling_daily").then(function(rows){
+    chart("c-pooling").setOption(base({
+      xAxis:Object.assign({type:"category",data:dates(rows)},AXIS),
+      yAxis:[Object.assign({type:"value",minInterval:1},AXIS),
+             Object.assign({type:"value",name:"pool size"},AXIS)],
+      series:[
+        {name:"sessions",type:"bar",barMaxWidth:20,data:rows.map(function(r){return n(r.sessions);})},
+        {name:"pooled",type:"bar",barMaxWidth:20,itemStyle:{color:C.aqua},data:rows.map(function(r){return n(r.pooled_sessions);})},
+        {name:"avg pool size",type:"line",yAxisIndex:1,symbol:"circle",itemStyle:{color:C.gold},
+         data:rows.map(function(r){return r.avg_pool_size?Number(r.avg_pool_size).toFixed(1):null;})}
+      ]}));
   });
   q("tokens_daily").then(function(rows){
     chart("c-tokens").setOption(base({
@@ -346,6 +434,48 @@ function tbl(id, cols, rows, render){
   }).join("") + "</tr></thead><tbody>" + rows.map(render).join("") + "</tbody>";
 }
 function loadTech(){
+  q("pipeline_health").then(function(rows){
+    var k = rows[0] || {};
+    var lastEvent = k.last_event_utc ? Date.parse(k.last_event_utc) : 0;
+    var ageMin = lastEvent ? Math.round((Date.now() - lastEvent) / 60000) : null;
+    var fresh = ageMin === null ? "no data" : ageMin < 30 ? ageMin + "m ago" : Math.round(ageMin/60) + "h ago";
+    document.getElementById("tech-kpis").innerHTML = [
+      [fresh, "Last event", ageMin !== null && ageMin < 60 ? "aqua" : "danger"],
+      [fmt(k.events_period), "Events · " + state.days + "d", ""],
+      [fmt(n(k.authed_batches) + n(k.anon_batches)), "Batches received", ""],
+      [fmt(k.authed_batches), "Authed batches", "iris"],
+      [fmt(k.opt_outs), "Opt-outs", n(k.opt_outs) > 0 ? "danger" : ""]
+    ].map(function(d){
+      return '<div class="kpi"><div class="v '+d[2]+'">'+d[0]+'</div><div class="l">'+d[1]+'</div></div>';
+    }).join("");
+  });
+  q("crash_details").then(function(rows){
+    tbl("t-crashes",
+      [{h:"location"},{h:"hash"},{h:"version"},{h:"kind"},{h:"count",num:1},{h:"last seen"}],
+      rows, function(r){
+        return "<tr><td class='mono'>"+(r.location||"?")+"</td><td class='mono'>"+short(r.panic_message_hash)+
+          "</td><td class='mono'>"+(r.version||"?")+"</td><td class='mono'>"+(r.kind||"?")+
+          "</td><td class='mono num' style='color:var(--danger)'>"+fmt(r.occurrences)+
+          "</td><td class='mono'>"+(r.last_seen||"").replace("T"," ").slice(0,16)+"</td></tr>";
+      });
+  });
+  q("errors_daily").then(function(rows){
+    var p = pivot(rows,"error_class","occurrences");
+    chart("c-errors-daily").setOption(base({
+      color:[C.coral,C.gold,C.danger,C.sky,C.iris],
+      xAxis:Object.assign({type:"category",data:p.dts},AXIS), yAxis:Object.assign({type:"value",minInterval:1},AXIS),
+      series:p.series.map(function(s){ return Object.assign(s,{type:"bar",stack:"e",barMaxWidth:22}); })
+    }));
+  });
+  q("perf_by_version").then(function(rows){
+    tbl("t-perf-ver",
+      [{h:"version"},{h:"sessions",num:1},{h:"decode p50",num:1},{h:"prefill p50",num:1},{h:"ttft ms",num:1}],
+      rows, function(r){
+        return "<tr><td class='mono'>"+(r.cli_version||"?")+"</td><td class='mono num'>"+fmt(r.sessions)+
+          "</td><td class='mono num'>"+n(r.decode_tps_p50).toFixed(1)+"</td><td class='mono num'>"+n(r.prefill_tps_p50).toFixed(1)+
+          "</td><td class='mono num'>"+fmt(Math.round(n(r.ttft_ms_p50)))+"</td></tr>";
+      });
+  });
   q("crashes_daily").then(function(rows){
     var p = pivot(rows,"version","crashes");
     chart("c-crashes").setOption(base({
