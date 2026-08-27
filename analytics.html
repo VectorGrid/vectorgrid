@@ -564,27 +564,55 @@ function installCell(r){
          "onclick='navigator.clipboard&&navigator.clipboard.writeText(this.title)'>" +
          short(r.install_id) + "…</span>";
 }
+function hardwareCell(r){
+  // "Apple M4 · 24 GB VRAM · 24 GB RAM · 12c" — whatever is known.
+  var parts = [];
+  if (r.device_name && r.device_name !== "null") parts.push(r.device_name);
+  if (r.vram_gb && r.vram_gb !== "null") parts.push(n(r.vram_gb).toFixed(0) + " GB VRAM");
+  if (r.ram_gb && r.ram_gb !== "null" && n(r.ram_gb) > 0) parts.push(n(r.ram_gb).toFixed(0) + " GB RAM");
+  if (r.cpu_cores && r.cpu_cores !== "null" && n(r.cpu_cores) > 0) parts.push(fmt(r.cpu_cores) + "c");
+  return parts.length ? "<span class='mono'>" + parts.join(" · ") + "</span>"
+                      : "<span style='color:var(--text-tertiary)'>not reported yet</span>";
+}
+function platformCell(r){
+  var v = (r.os || "?") + "/" + (r.backend || "?");
+  if (r.os_version && r.os_version !== "null" && r.os_version !== "") v += " " + r.os_version;
+  return v;
+}
+function ageCell(r){
+  var born = Date.parse(r.first_seen || 0);
+  if (!born) return "–";
+  var days = Math.max(0, Math.round((Date.now() - born) / 864e5));
+  return days + "d · " + fmt(r.active_days) + " active";
+}
 function loadActors(){
   q("consumers").then(function(rows){
     tbl("t-consumers",
-      [{h:"account"},{h:"install id"},{h:"health"},{h:"last seen"},{h:"platform"},{h:"version"},{h:"sessions",num:1},{h:"tokens",num:1},{h:"decode tok/s",num:1},{h:"failovers",num:1},{h:"crashes",num:1}],
+      [{h:"account"},{h:"install id"},{h:"health"},{h:"last seen"},{h:"age / days used"},{h:"hardware"},{h:"platform"},{h:"version"},{h:"models"},{h:"sessions",num:1},{h:"tokens",num:1},{h:"decode tok/s",num:1},{h:"max ctx",num:1},{h:"pool",num:1},{h:"failovers",num:1},{h:"crashes",num:1}],
       rows, function(r){
         return "<tr><td>"+accountCell(r)+"</td><td>"+installCell(r)+"</td><td>"+healthDot(r.last_seen)+
           "</td><td class='mono'>"+(r.last_seen||"").replace("T"," ").slice(0,16)+
-          "</td><td class='mono'>"+(r.os||"?")+"/"+(r.backend||"?")+"</td><td class='mono'>"+(r.version||"?")+
+          "</td><td class='mono'>"+ageCell(r)+
+          "</td><td>"+hardwareCell(r)+
+          "</td><td class='mono'>"+platformCell(r)+"</td><td class='mono'>"+(r.version||"?")+
+          "</td><td class='mono' style='max-width:220px;overflow:hidden;text-overflow:ellipsis' title='"+(r.models||"")+"'>"+(r.models||"–")+
           "</td><td class='mono num'>"+fmt(r.sessions)+"</td><td class='mono num'>"+fmt(r.tokens)+
           "</td><td class='mono num'>"+(r.avg_decode_tps?n(r.avg_decode_tps).toFixed(1):"–")+
+          "</td><td class='mono num'>"+(r.max_ctx?fmt(r.max_ctx):"–")+
+          "</td><td class='mono num'>"+(r.max_pool&&r.max_pool!=="null"?fmt(r.max_pool):"–")+
           "</td><td class='mono num'>"+fmt(r.failovers)+
           "</td><td class='mono num'"+(n(r.crashes)>0?" style='color:var(--danger)'":"")+">"+fmt(r.crashes)+"</td></tr>";
       });
   });
   q("producers").then(function(rows){
     tbl("t-producers",
-      [{h:"account"},{h:"install id"},{h:"health"},{h:"last seen"},{h:"platform"},{h:"version"},{h:"worker starts",num:1},{h:"secure sessions",num:1},{h:"bulk abandons",num:1},{h:"crashes",num:1}],
+      [{h:"account"},{h:"install id"},{h:"health"},{h:"last seen"},{h:"age / days used"},{h:"hardware"},{h:"platform"},{h:"version"},{h:"worker starts",num:1},{h:"secure sessions",num:1},{h:"bulk abandons",num:1},{h:"crashes",num:1}],
       rows, function(r){
         return "<tr><td>"+accountCell(r)+"</td><td>"+installCell(r)+"</td><td>"+healthDot(r.last_seen)+
           "</td><td class='mono'>"+(r.last_seen||"").replace("T"," ").slice(0,16)+
-          "</td><td class='mono'>"+(r.os||"?")+"/"+(r.backend||"?")+"</td><td class='mono'>"+(r.version||"?")+
+          "</td><td class='mono'>"+ageCell(r)+
+          "</td><td>"+hardwareCell(r)+
+          "</td><td class='mono'>"+platformCell(r)+"</td><td class='mono'>"+(r.version||"?")+
           "</td><td class='mono num'>"+fmt(r.worker_starts)+"</td><td class='mono num'>"+fmt(r.secure_sessions)+
           "</td><td class='mono num'"+(n(r.bulk_abandons)>0?" style='color:var(--gold-400)'":"")+">"+fmt(r.bulk_abandons)+
           "</td><td class='mono num'"+(n(r.crashes)>0?" style='color:var(--danger)'":"")+">"+fmt(r.crashes)+"</td></tr>";
