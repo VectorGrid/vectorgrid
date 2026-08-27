@@ -84,6 +84,7 @@ td code{white-space:nowrap}
   <a href="#agent">The agent</a>
   <a href="#serve">Serve an API</a>
   <a href="#pool">Pool your machines</a>
+  <a href="#grid">The VectorGrid network</a>
   <a href="#models">Models &amp; context</a>
   <div class="h">Operate</div>
   <a href="#telemetry">Telemetry &amp; privacy</a>
@@ -140,6 +141,17 @@ td code{white-space:nowrap}
 </ul>
 <p>Name machines explicitly with <code>--nodes vgt://host:19310</code>, control the split with <code>--gpu-split 24,24</code>. If discovery misbehaves, <code>vectorgrid doctor</code> diagnoses your LAN (firewalls, broadcast, WiFi power-save) with exact fix commands.</p>
 
+<h2 id="grid">The VectorGrid network</h2>
+<p>No second machine? Pool with a peer on the grid instead. The model file downloads to your disk; the heavy compute runs on your peer over the same encrypted VGT session pooling uses on a LAN.</p>
+<div class="block"><button data-copy>copy</button><code><span class="dollar">$</span> vectorgrid grid models        # what the network serves right now
+<span class="dollar">$</span> vectorgrid run qwen2.5-14b-instruct --grid</code></div>
+<ul>
+<li><strong>Tiers compose.</strong> <code>--pool --grid</code> prefers your LAN and falls back to the network only when no local peer holds the model.</li>
+<li><strong>Honest by design.</strong> No capacity is a clear message and a local fallback — never a hang. The network is young; what it serves will grow.</li>
+<li><strong>Signed-in only.</strong> Grid sessions need a live sign-in; the offline grace window that keeps local commands working doesn't grant network capacity.</li>
+<li><strong>Same guarantees.</strong> AEAD-encrypted session, per-session key, and the engine's mid-generation failover.</li>
+</ul>
+
 <h2 id="models">Models &amp; context</h2>
 <div class="block"><button data-copy>copy</button><code><span class="dollar">$</span> vectorgrid pull &lt;name&gt;      # 40+ curated models, parallel + resumable + verified
 <span class="dollar">$</span> vectorgrid list             # what's installed
@@ -171,6 +183,8 @@ td code{white-space:nowrap}
 <tr><td><code>vectorgrid serve --model &lt;m&gt; [--port N] [--api-keys …]</code></td><td>OpenAI-compatible API server</td></tr>
 <tr><td><code>vectorgrid worker --listen vgt://0.0.0.0:19310 [--announce]</code></td><td>Offer this machine's compute to your grid</td></tr>
 <tr><td><code>vectorgrid run &lt;m&gt; --pool | --nodes vgt://host:port</code></td><td>Split the model across pooled machines</td></tr>
+<tr><td><code>vectorgrid run &lt;m&gt; --grid</code></td><td>Pool with a peer on the VectorGrid network</td></tr>
+<tr><td><code>vectorgrid grid models</code></td><td>What the network serves right now</td></tr>
 <tr><td><code>vectorgrid pull / list / show / info / rm / gc</code></td><td>Model management (parallel pulls, LRU cache cleanup)</td></tr>
 <tr><td><code>vectorgrid daemon start|stop|status|logs · ps · stop</code></td><td>Background server lifecycle</td></tr>
 <tr><td><code>vectorgrid login / signup / verify-email / logout / whoami</code></td><td>Account</td></tr>
