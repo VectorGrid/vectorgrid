@@ -111,13 +111,37 @@ sha256_of() {
 # -----------------------------------------------------------------------------
 main() {
   # Resolve "latest" unless the caller pinned a version.
+  #
+  # Primary: follow the release-page redirect — github.com/…/releases/latest
+  # 302s to /releases/tag/vX.Y.Z with NO API involved, so it never hits the
+  # anonymous api.github.com rate limit (60 req/hr/IP) that broke installs
+  # for users behind shared IPs (CGNAT, offices, campus networks).
+  # Fallback: the API, for environments that block redirects.
   if [ -z "${VECTORGRID_VERSION}" ]; then
     info "Resolving latest release..."
-    api="https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest"
+    latest_url="https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest"
     if command -v curl >/dev/null 2>&1; then
-      VECTORGRID_VERSION="$(curl -fsSL "${api}" 2>/dev/null | sed -n 's/.*"tag_name"[^"]*"\([^"]*\)".*/\1/p' | head -1)"
+      resolved="$(curl -fsI -o /dev/null -w '%{url_effective}' -L "${latest_url}" 2>/dev/null)"
+      VECTORGRID_VERSION="${resolved##*/tag/}"
+      case "${VECTORGRID_VERSION}" in
+        v[0-9]*) : ;;
+        *) VECTORGRID_VERSION="" ;;
+      esac
     else
-      VECTORGRID_VERSION="$(wget -qO- "${api}" 2>/dev/null | sed -n 's/.*"tag_name"[^"]*"\([^"]*\)".*/\1/p' | head -1)"
+      resolved="$(wget -q -O /dev/null -S --max-redirect=0 "${latest_url}" 2>&1 | sed -n 's/.*[Ll]ocation: *//p' | head -1 | tr -d '\r')"
+      VECTORGRID_VERSION="${resolved##*/tag/}"
+      case "${VECTORGRID_VERSION}" in
+        v[0-9]*) : ;;
+        *) VECTORGRID_VERSION="" ;;
+      esac
+    fi
+    if [ -z "${VECTORGRID_VERSION}" ]; then
+      api="https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest"
+      if command -v curl >/dev/null 2>&1; then
+        VECTORGRID_VERSION="$(curl -fsSL "${api}" 2>/dev/null | sed -n 's/.*"tag_name"[^"]*"\([^"]*\)".*/\1/p' | head -1)"
+      else
+        VECTORGRID_VERSION="$(wget -qO- "${api}" 2>/dev/null | sed -n 's/.*"tag_name"[^"]*"\([^"]*\)".*/\1/p' | head -1)"
+      fi
     fi
     [ -n "${VECTORGRID_VERSION}" ] || fatal "Could not determine the latest release. Pin one with VECTORGRID_VERSION=vX.Y.Z"
   fi
